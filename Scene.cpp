@@ -35,8 +35,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 }
 
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
-    Matrix4 modeledMatrix;
-    Matrix4 identity_matrix = getIdentityMatrix();
+    Matrix4 modeledMatrix = getIdentityMatrix();
+    Matrix4 preComputedMatrix = getIdentityMatrix();
 
     for (int i = 0; i < mesh->numberOfTransformations; i++) {
         switch (mesh->transformationTypes[i]) {
@@ -44,11 +44,13 @@ Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
 
                 break;
             case 't':
-
+                preComputedMatrix = computeTranslationMatrix(
+                        this->translations[mesh->transformationIds[i] - 1]);
+                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
                 break;
             case 's':
-                Matrix4 preComputedScalingMatrix = computeScalingMatrix(this->scalings[i]);
-                identity_matrix = multiplyMatrixWithMatrix(identity_matrix, preComputedScalingMatrix);
+                preComputedMatrix = computeScalingMatrix(this->scalings[mesh->transformationIds[i] - 1]);
+                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
                 break;
         }
     }

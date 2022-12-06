@@ -14,7 +14,7 @@
 /*
 * Compute all translation matrices.
 */
-vector<Matrix4> computeTranslationMatrix(vector<Translation*>);
+Matrix4 computeTranslationMatrix(Translation*);
 /*
 * Compute all rotation matrices.
 */
@@ -24,7 +24,7 @@ vector<Matrix4> computeRotationMatrix(vector<Rotation*>);
 */
 vector<Matrix4> computeScalingMatrix(vector<Scaling*>);
 
-vector<Matrix4> computeTranslationMatrix(vector<Translation *>);
+Matrix4 computeTranslationMatrix(Translation *);
 
 vector<Matrix4> computeRotationMatrix(vector<Rotation *>);
 
