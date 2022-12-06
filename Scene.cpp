@@ -44,10 +44,11 @@ Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
 
                 break;
             case 't':
+
                 break;
             case 's':
                 Matrix4 preComputedScalingMatrix = computeScalingMatrix(this->scalings[i]);
-
+                identity_matrix = multiplyMatrixWithMatrix(identity_matrix, preComputedScalingMatrix);
                 break;
         }
     }
