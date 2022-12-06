@@ -20,6 +20,22 @@
 using namespace tinyxml2;
 using namespace std;
 
+Matrix4 Scene::computeTranslation(int &id){
+	Translation* currTrans = this->translations[id-1];
+	Matrix4 res = getIdentityMatrix();
+	res.val[0][3] = currTrans->tx;
+	res.val[1][3] = currTrans->ty;
+	res.val[2][3] = currTrans->tz;
+	return res;
+}
+
+Matrix4 Scene::computeRotation(int &id){
+	Matrix4 res = getIdentityMatrix();
+	Rotation* currRotation = this->rotations[id-1];
+
+	
+}
+
 /*
 	Transformations, clipping, culling, rasterization are done here.
 	You may define helper functions.
@@ -27,6 +43,7 @@ using namespace std;
 void Scene::forwardRenderingPipeline(Camera *camera)
 {
 	// TODO: Implement this function.
+	
 }
 
 /*

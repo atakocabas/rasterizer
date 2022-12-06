@@ -8,6 +8,10 @@
 #include "Vec3.h"
 #include "Vec4.h"
 
+
+Matrix4 computeTranslationMatrix(vector<Translation*>);
+Matrix4 computeRotationMatrix(vector<Rotation*>);
+Matrix4 computeScalingMatrix(vector<Scaling*>);
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
  */

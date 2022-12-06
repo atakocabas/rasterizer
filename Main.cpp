@@ -23,6 +23,12 @@ int main(int argc, char *argv[])
 
         scene = new Scene(xmlPath);
 
+        vector<Matrix4> translations = computeTranslationMatrix(scene->translations);
+        vector<Matrix4> scalings = computeScalingMatrix(scene->scalings);
+        vector<Matrix4> rotations = computeRotationMatrix(scene->rotations);
+
+
+
         for (int i = 0; i < scene->cameras.size(); i++)
         {
             // initialize image with basic values

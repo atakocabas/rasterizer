@@ -4,8 +4,26 @@
 #include "Matrix4.h"
 #include "Vec3.h"
 #include "Vec4.h"
+#include "Translation.h"
+#include "Scaling.h"
+#include "Rotation.h"
+#include <vector>
 
 using namespace std;
+
+
+vector<Matrix4> computeTranslationMatrix(vector<Translation*> translation){
+    vector<Matrix4> res;
+    
+}
+
+vector<Matrix4> computeRotationMatrix(vector<Rotation*> rotation){
+
+}
+
+vector<Matrix4> computeScalingMatrix(vector<Scaling*> scaling){
+
+}
 
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
