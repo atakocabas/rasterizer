@@ -12,11 +12,11 @@
 using namespace std;
 
 
-vector<Matrix4> computeTranslationMatrix(vector<Translation*> translation){
+vector<Matrix4> computeTranslationMatrix(vector<Translation *> translation) {
     vector<Matrix4> res;
     int size = translation.size();
-    for(int i=0; i < size; ++i){
-        Translation* t = translation[i];
+    for (int i = 0; i < size; ++i) {
+        Translation *t = translation[i];
         Matrix4 m = getIdentityMatrix();
         m.val[0][3] = t->tx;
         m.val[1][3] = t->ty;
@@ -58,15 +58,21 @@ vector<Matrix4> computeRotationMatrix(vector<Rotation*> rotation){
     return res;
 }
 
-vector<Matrix4> computeScalingMatrix(vector<Scaling*> scaling){
+Matrix4 computeScalingMatrix(Scaling* s) {
+    Matrix4 m = getIdentityMatrix();
+    m.val[0][3] = s->sx;
+    m.val[1][3] = s->sy;
+    m.val[2][3] = s->sz;
+
+    return m;
+
 
 }
 
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
  */
-Vec3 crossProductVec3(Vec3 a, Vec3 b)
-{
+Vec3 crossProductVec3(Vec3 a, Vec3 b) {
     Vec3 result;
 
     result.x = a.y * b.z - b.y * a.z;
@@ -79,24 +85,21 @@ Vec3 crossProductVec3(Vec3 a, Vec3 b)
 /*
  * Calculate dot product of vec3 a, vec3 b and return resulting value.
  */
-double dotProductVec3(Vec3 a, Vec3 b)
-{
+double dotProductVec3(Vec3 a, Vec3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /*
  * Find length (|v|) of vec3 v.
  */
-double magnitudeOfVec3(Vec3 v)
-{
+double magnitudeOfVec3(Vec3 v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /*
  * Normalize the vec3 to make it unit vec3.
  */
-Vec3 normalizeVec3(Vec3 v)
-{
+Vec3 normalizeVec3(Vec3 v) {
     Vec3 result;
     double d;
 
@@ -111,8 +114,7 @@ Vec3 normalizeVec3(Vec3 v)
 /*
  * Return -v (inverse of vec3 v)
  */
-Vec3 inverseVec3(Vec3 v)
-{
+Vec3 inverseVec3(Vec3 v) {
     Vec3 result;
     result.x = -v.x;
     result.y = -v.y;
@@ -124,8 +126,7 @@ Vec3 inverseVec3(Vec3 v)
 /*
  * Add vec3 a to vec3 b and return resulting vec3 (a+b).
  */
-Vec3 addVec3(Vec3 a, Vec3 b)
-{
+Vec3 addVec3(Vec3 a, Vec3 b) {
     Vec3 result;
     result.x = a.x + b.x;
     result.y = a.y + b.y;
@@ -137,8 +138,7 @@ Vec3 addVec3(Vec3 a, Vec3 b)
 /*
  * Subtract vec3 b from vec3 a and return resulting vec3 (a-b).
  */
-Vec3 subtractVec3(Vec3 a, Vec3 b)
-{
+Vec3 subtractVec3(Vec3 a, Vec3 b) {
     Vec3 result;
     result.x = a.x - b.x;
     result.y = a.y - b.y;
@@ -150,8 +150,7 @@ Vec3 subtractVec3(Vec3 a, Vec3 b)
 /*
  * Multiply each element of vec3 with scalar.
  */
-Vec3 multiplyVec3WithScalar(Vec3 v, double c)
-{
+Vec3 multiplyVec3WithScalar(Vec3 v, double c) {
     Vec3 result;
     result.x = v.x * c;
     result.y = v.y * c;
@@ -163,8 +162,7 @@ Vec3 multiplyVec3WithScalar(Vec3 v, double c)
 /*
  * Prints elements in a vec3. Can be used for debugging purposes.
  */
-void printVec3(Vec3 v)
-{
+void printVec3(Vec3 v) {
     cout << "(" << v.x << "," << v.y << "," << v.z << ")" << endl;
 }
 
@@ -173,16 +171,12 @@ void printVec3(Vec3 v)
  * In case of equality, returns 1.
  * Otherwise, returns 0.
  */
-int areEqualVec3(Vec3 a, Vec3 b)
-{
+int areEqualVec3(Vec3 a, Vec3 b) {
 
     /* if x difference, y difference and z difference is smaller than threshold, then they are equal */
-    if ((ABS((a.x - b.x)) < EPSILON) && (ABS((a.y - b.y)) < EPSILON) && (ABS((a.z - b.z)) < EPSILON))
-    {
+    if ((ABS((a.x - b.x)) < EPSILON) && (ABS((a.y - b.y)) < EPSILON) && (ABS((a.z - b.z)) < EPSILON)) {
         return 1;
-    }
-    else
-    {
+    } else {
         return 0;
     }
 }
@@ -190,20 +184,14 @@ int areEqualVec3(Vec3 a, Vec3 b)
 /*
  * Returns an identity matrix (values on the diagonal are 1, others are 0).
 */
-Matrix4 getIdentityMatrix()
-{
+Matrix4 getIdentityMatrix() {
     Matrix4 result;
 
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            if (i == j)
-            {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (i == j) {
                 result.val[i][j] = 1.0;
-            }
-            else
-            {
+            } else {
                 result.val[i][j] = 0.0;
             }
         }
@@ -215,18 +203,14 @@ Matrix4 getIdentityMatrix()
 /*
  * Multiply matrices m1 (Matrix4) and m2 (Matrix4) and return the result matrix r (Matrix4).
  */
-Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2)
-{
+Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2) {
     Matrix4 result;
     double total;
 
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
             total = 0;
-            for (int k = 0; k < 4; k++)
-            {
+            for (int k = 0; k < 4; k++) {
                 total += m1.val[i][k] * m2.val[k][j];
             }
 
@@ -240,16 +224,13 @@ Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2)
 /*
  * Multiply matrix m (Matrix4) with vector v (vec4) and store the result in vector r (vec4).
  */
-Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v)
-{
+Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v) {
     double values[4];
     double total;
 
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
         total = 0;
-        for (int j = 0; j < 4; j++)
-        {
+        for (int j = 0; j < 4; j++) {
             total += m.val[i][j] * v.getElementAt(j);
         }
         values[i] = total;

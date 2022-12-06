@@ -17,6 +17,7 @@
 #include "Triangle.h"
 #include "Vec3.h"
 #include "Vec4.h"
+#include "Matrix4.h"
 
 using namespace std;
 
@@ -42,7 +43,7 @@ public:
 	int makeBetweenZeroAnd255(double value);
 	void writeImageToPPMFile(Camera* camera);
 	void convertPPMToPNG(string ppmFileName, int osType);
-	
+    Matrix4 ModelingTransformation(Mesh* mesh);
 };
 
 #endif
