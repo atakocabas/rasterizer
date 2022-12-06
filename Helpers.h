@@ -11,6 +11,18 @@
 #include "Scaling.h"
 #include "Rotation.h"
 
+/*
+* Compute all translation matrices.
+*/
+vector<Matrix4> computeTranslationMatrix(vector<Translation*>);
+/*
+* Compute all rotation matrices.
+*/
+vector<Matrix4> computeRotationMatrix(vector<Rotation*>);
+/*
+* Compute all scaling matrices.
+*/
+vector<Matrix4> computeScalingMatrix(vector<Scaling*>);
 
 vector<Matrix4> computeTranslationMatrix(vector<Translation *>);
 
