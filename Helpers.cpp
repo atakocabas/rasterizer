@@ -29,7 +29,33 @@ vector<Matrix4> computeTranslationMatrix(vector<Translation*> translation){
 vector<Matrix4> computeRotationMatrix(vector<Rotation*> rotation){
     vector<Matrix4> res;
     int size = rotation.size();
-    
+    for(int i=0; i < size; ++i){
+        Rotation* r = rotation.at(i);
+        double angle = r->angle;
+        Vec3 u(r->ux, r->uy, r->uz, 0), v, w;
+        Matrix4 fin;
+
+        if(abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {v.x = 0; v.y = -u.z; v.z = u.y;}
+        if(abs(u.y) <= abs(u.x) && abs(u.y) <= abs(u.z)) {v.x = -u.z; v.y = 0; v.z = u.x;}
+        if(abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {v.x = -u.y; v.y = u.x; v.z = 0;}
+        w = crossProductVec3(u, v);
+
+        Matrix4 m = getIdentityMatrix(), mminus = getIdentityMatrix(), rx = getIdentityMatrix();
+        m.val[0][0] = u.x; m.val[0][1] = u.y; m.val[0][2] = u.z;
+        m.val[1][0] = v.x; m.val[1][1] = v.y; m.val[1][2] = v.z;
+        m.val[2][0] = w.x; m.val[2][1] = w.y; m.val[2][2] = w.z;
+
+        mminus.val[0][0] = u.x; mminus.val[0][1] = v.x; mminus.val[0][2] = w.x;
+        mminus.val[0][0] = u.y; mminus.val[0][1] = v.x; mminus.val[0][2] = w.x;
+        mminus.val[0][0] = u.z; mminus.val[0][1] = v.x; mminus.val[0][2] = w.x;
+
+        rx.val[1][1] = cos(angle); rx.val[1][2] = -sin(angle);
+        rx.val[2][1] = sin(angle); rx.val[2][2] = cos(angle);
+
+        fin = multiplyMatrixWithMatrix(mminus, multiplyMatrixWithMatrix(rx, m));
+        res.push_back(fin);
+    }
+    return res;
 }
 
 vector<Matrix4> computeScalingMatrix(vector<Scaling*> scaling){
