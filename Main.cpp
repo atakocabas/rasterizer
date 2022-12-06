@@ -23,8 +23,6 @@ int main(int argc, char *argv[])
 
         scene = new Scene(xmlPath);
 
-        vector<Matrix4> translations = computeTranslationMatrix(scene->translations);
-        vector<Matrix4> rotations = computeRotationMatrix(scene->rotations);
 
 
 

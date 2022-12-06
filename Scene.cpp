@@ -29,8 +29,26 @@ Matrix4 ModelingTransformation(Mesh *mesh);
 
 void Scene::forwardRenderingPipeline(Camera *camera) {
     // TODO: Implement this function.
-    for (auto &mesh: this->meshes)
+    for (auto &mesh: this->meshes) {
         Matrix4 transformed = ModelingTransformation(mesh);
+        for (auto &triangle: mesh->triangles) {
+
+            //TODO: Check Ids if any range error thrown
+            Vec3 *new_vertex = this->vertices[triangle.getFirstVertexId() - 1];
+
+            Vec4 vertex = {
+                    new_vertex->x, new_vertex->y, new_vertex->z, 1, new_vertex->colorId,
+            };
+            vertex = multiplyMatrixWithVec4(transformed, vertex);
+
+            new_vertex->x = vertex.x;
+            new_vertex->y = vertex.y;
+            new_vertex->z = vertex.z;
+
+
+        }
+
+    }
 
 }
 
@@ -41,7 +59,7 @@ Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
     for (int i = 0; i < mesh->numberOfTransformations; i++) {
         switch (mesh->transformationTypes[i]) {
             case 'r':
-                preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i]-1]);
+                preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i] - 1]);
                 modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
                 break;
             case 't':
