@@ -14,11 +14,22 @@ using namespace std;
 
 vector<Matrix4> computeTranslationMatrix(vector<Translation*> translation){
     vector<Matrix4> res;
-    
+    int size = translation.size();
+    for(int i=0; i < size; ++i){
+        Translation* t = translation[i];
+        Matrix4 m = getIdentityMatrix();
+        m.val[0][3] = t->tx;
+        m.val[1][3] = t->ty;
+        m.val[2][3] = t->tz;
+        res.push_back(m);
+    }
+    return res;
 }
 
 vector<Matrix4> computeRotationMatrix(vector<Rotation*> rotation){
-
+    vector<Matrix4> res;
+    int size = rotation.size();
+    
 }
 
 vector<Matrix4> computeScalingMatrix(vector<Scaling*> scaling){
