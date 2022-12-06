@@ -41,7 +41,8 @@ Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
     for (int i = 0; i < mesh->numberOfTransformations; i++) {
         switch (mesh->transformationTypes[i]) {
             case 'r':
-
+                preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i]-1]);
+                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
                 break;
             case 't':
                 preComputedMatrix = computeTranslationMatrix(

@@ -18,17 +18,12 @@ Matrix4 computeTranslationMatrix(Translation*);
 /*
 * Compute all rotation matrices.
 */
-vector<Matrix4> computeRotationMatrix(vector<Rotation*>);
+Matrix4 computeRotationMatrix(Rotation*);
 /*
 * Compute all scaling matrices.
 */
-vector<Matrix4> computeScalingMatrix(vector<Scaling*>);
-
-Matrix4 computeTranslationMatrix(Translation *);
-
-vector<Matrix4> computeRotationMatrix(vector<Rotation *>);
-
 Matrix4 computeScalingMatrix(Scaling*);
+
 
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.

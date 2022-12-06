@@ -20,12 +20,8 @@ Matrix4 computeTranslationMatrix(Translation *t) {
 
     return m;
 }
-
-vector<Matrix4> computeRotationMatrix(vector<Rotation *> rotation) {
-    vector<Matrix4> res;
-    int size = rotation.size();
-    for (int i = 0; i < size; ++i) {
-        Rotation *r = rotation.at(i);
+Matrix4 computeRotationMatrix(Rotation* rotation) {
+        Rotation *r = rotation;
         double angle = r->angle;
         Vec3 u(r->ux, r->uy, r->uz, 0), v, w;
         Matrix4 fin;
@@ -74,9 +70,7 @@ vector<Matrix4> computeRotationMatrix(vector<Rotation *> rotation) {
         rx.val[2][2] = cos(angle);
 
         fin = multiplyMatrixWithMatrix(mminus, multiplyMatrixWithMatrix(rx, m));
-        res.push_back(fin);
-    }
-    return res;
+        return fin;
 }
 
 Matrix4 computeScalingMatrix(Scaling *s) {
