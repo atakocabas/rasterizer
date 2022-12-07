@@ -23,9 +23,6 @@ int main(int argc, char *argv[])
 
         scene = new Scene(xmlPath);
 
-
-
-
         for (int i = 0; i < scene->cameras.size(); i++)
         {
             // initialize image with basic values

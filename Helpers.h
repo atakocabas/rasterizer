@@ -10,7 +10,12 @@
 #include "Translation.h"
 #include "Scaling.h"
 #include "Rotation.h"
+#include "Camera.h"
 
+/*
+WCS to CCS matrix.
+*/
+Matrix4 computeViewingTransformationMatrix(Camera*);
 /*
 * Compute all translation matrices.
 */

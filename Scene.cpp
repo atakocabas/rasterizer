@@ -29,8 +29,10 @@ Matrix4 ModelingTransformation(Mesh *mesh);
 
 void Scene::forwardRenderingPipeline(Camera *camera) {
     // TODO: Implement this function.
+    Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     for (auto &mesh: this->meshes) {
         Matrix4 transformed = ModelingTransformation(mesh);
+        transformed = multiplyMatrixWithMatrix(camViewMatrix, transformed);
         for (auto &triangle: mesh->triangles) {
 
             //TODO: Check Ids if any range error thrown
@@ -45,8 +47,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
             new_vertex->y = vertex.y;
             new_vertex->z = vertex.z;
 
-        }
 
+        }
     }
 }
 

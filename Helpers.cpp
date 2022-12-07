@@ -11,6 +11,21 @@
 
 using namespace std;
 
+Matrix4 computeViewingTransformationMatrix(Camera* cam){
+    Matrix4 res;
+    Matrix4 t = getIdentityMatrix(), m = getIdentityMatrix();
+
+    t.val[0][3] = -cam->pos.x;
+    t.val[1][3] = -cam->pos.y;
+    t.val[2][3] = -cam->pos.z;
+
+    m.val[0][0] = cam->u.x; m.val[0][1] = cam->u.y; m. val[0][2] = cam->u.z; 
+    m.val[1][0] = cam->v.x; m.val[1][1] = cam->v.y; m. val[2][2] = cam->v.z; 
+    m.val[2][0] = cam->w.x; m.val[2][1] = cam->w.y; m. val[2][2] = cam->w.z; 
+
+    res = multiplyMatrixWithMatrix(m, t);
+    return res;
+}
 
 Matrix4 computeTranslationMatrix(Translation *t) {
     Matrix4 m = getIdentityMatrix();
@@ -80,8 +95,6 @@ Matrix4 computeScalingMatrix(Scaling *s) {
     m.val[2][3] = s->sz;
 
     return m;
-
-
 }
 
 /*
