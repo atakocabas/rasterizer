@@ -12,6 +12,8 @@
 #include "Rotation.h"
 #include "Camera.h"
 
+Matrix4 calculateViewportMatrix(Camera*);
+
 Matrix4 calculatePerspectiveProjection(Camera* camera);
 
 Matrix4 calculateOrthographicProjection(Camera *camera);

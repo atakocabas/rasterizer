@@ -11,6 +11,17 @@
 
 using namespace std;
 
+Matrix4 calculateViewportMatrix(Camera* camera){
+    Matrix4 res = getIdentityMatrix();
+
+    res.val[0][0] = camera->verRes / 2;
+    res.val[0][3] = ((camera->verRes - 1) / 2);
+    res.val[1][1] = camera->horRes / 2;
+    res.val[1][3] = ((camera->horRes - 1) / 2);
+    res.val[0][0] = 0.5;
+    res.val[0][0] = 0.5;
+}
+
 Matrix4 calculatePerspectiveProjection(Camera* camera){
     Matrix4 p2o = getIdentityMatrix();
     Matrix4 ortoMatrix = calculateOrthographicProjection(camera);
