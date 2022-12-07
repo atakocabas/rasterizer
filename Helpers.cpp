@@ -11,25 +11,78 @@
 
 using namespace std;
 
-Matrix4 calculateViewportMatrix(Camera* camera){
+Matrix4 calculateViewportMatrix(Camera *camera) {
     Matrix4 res = getIdentityMatrix();
 
-    res.val[0][0] = camera->verRes / 2;
-    res.val[0][3] = ((camera->verRes - 1) / 2);
-    res.val[1][1] = camera->horRes / 2;
-    res.val[1][3] = ((camera->horRes - 1) / 2);
+    res.val[0][0] = camera->verRes / 2.0;
+    res.val[0][3] = ((camera->verRes - 1) / 2.0);
+    res.val[1][1] = camera->horRes / 2.0;
+    res.val[1][3] = ((camera->horRes - 1) / 2.0);
     res.val[0][0] = 0.5;
     res.val[0][0] = 0.5;
 }
 
-Matrix4 calculatePerspectiveProjection(Camera* camera){
+bool isVisible(float den, float num, float t_e, float t_l) {
+    float t = num / den;
+    if (den > 0)//potentially entering
+    {
+        t = num / den;
+        if (t > t_l) {
+            return false;
+        }
+        if (t > t_e) {
+            t_e = t;
+        }
+    } else if (den < 0) {
+        t = num / den;
+        if (t < t_e) {
+            return false;
+
+        }
+        if (t < t_l) {
+            t_l = t;
+        }
+    } else if (num > 0) {
+        return false;
+    }
+    return true;
+
+}
+
+void LiangBarskyAlgorithm() {
+    float t_e = 0;
+
+    float t_l = 1;
+    bool visible = false;
+    //float dx =
+    //if (isVisible())
+
+}
+
+Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3) {
+    Vec3 u = subtractVec3(v2, v1);
+    Vec3 v = subtractVec3(v3, v1);
+
+    return crossProductVec3(u, v);
+}
+
+bool IsTriangleVisible(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 viewerPosition) {
+    Vec3 normal = ComputeTriangleNormal(v1, v2, v3);
+    Vec3 toViewer = subtractVec3(viewerPosition, v1);
+// Check if a triangle is facing the viewer
+
+    return dotProductVec3(normal, toViewer) > 0;
+}
+
+Matrix4 calculatePerspectiveProjection(Camera *camera) {
     Matrix4 p2o = getIdentityMatrix();
     Matrix4 ortoMatrix = calculateOrthographicProjection(camera);
     p2o.val[0][0] = camera->near;
     p2o.val[1][1] = camera->near;
     p2o.val[2][2] = camera->far + camera->near;
     p2o.val[2][3] = camera->far * camera->near;
-    p2o.val[3][2] = -1; p2o.val[3][3] = 0;
+    p2o.val[3][2] = -1;
+    p2o.val[3][3] = 0;
 
     return multiplyMatrixWithMatrix(p2o, ortoMatrix);
 }
@@ -49,7 +102,7 @@ Matrix4 calculateOrthographicProjection(Camera *camera) {
 
 }
 
-Matrix4 computeViewingTransformationMatrix(Camera* cam){
+Matrix4 computeViewingTransformationMatrix(Camera *cam) {
     Matrix4 res;
     Matrix4 t = getIdentityMatrix(), m = getIdentityMatrix();
 
@@ -57,9 +110,15 @@ Matrix4 computeViewingTransformationMatrix(Camera* cam){
     t.val[1][3] = -cam->pos.y;
     t.val[2][3] = -cam->pos.z;
 
-    m.val[0][0] = cam->u.x; m.val[0][1] = cam->u.y; m. val[0][2] = cam->u.z; 
-    m.val[1][0] = cam->v.x; m.val[1][1] = cam->v.y; m. val[2][2] = cam->v.z; 
-    m.val[2][0] = cam->w.x; m.val[2][1] = cam->w.y; m. val[2][2] = cam->w.z; 
+    m.val[0][0] = cam->u.x;
+    m.val[0][1] = cam->u.y;
+    m.val[0][2] = cam->u.z;
+    m.val[1][0] = cam->v.x;
+    m.val[1][1] = cam->v.y;
+    m.val[2][2] = cam->v.z;
+    m.val[2][0] = cam->w.x;
+    m.val[2][1] = cam->w.y;
+    m.val[2][2] = cam->w.z;
 
     res = multiplyMatrixWithMatrix(m, t);
     return res;
@@ -74,57 +133,57 @@ Matrix4 computeTranslationMatrix(Translation *t) {
     return m;
 }
 
-Matrix4 computeRotationMatrix(Rotation* rotation) {
-        Rotation *r = rotation;
-        double angle = r->angle;
-        Vec3 u(r->ux, r->uy, r->uz, 0), v, w;
-        Matrix4 fin;
+Matrix4 computeRotationMatrix(Rotation *rotation) {
+    Rotation *r = rotation;
+    double angle = r->angle;
+    Vec3 u(r->ux, r->uy, r->uz, 0), v, w;
+    Matrix4 fin;
 
-        if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
-            v.x = 0;
-            v.y = -u.z;
-            v.z = u.y;
-        }
-        if (abs(u.y) <= abs(u.x) && abs(u.y) <= abs(u.z)) {
-            v.x = -u.z;
-            v.y = 0;
-            v.z = u.x;
-        }
-        if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
-            v.x = -u.y;
-            v.y = u.x;
-            v.z = 0;
-        }
-        w = crossProductVec3(u, v);
+    if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
+        v.x = 0;
+        v.y = -u.z;
+        v.z = u.y;
+    }
+    if (abs(u.y) <= abs(u.x) && abs(u.y) <= abs(u.z)) {
+        v.x = -u.z;
+        v.y = 0;
+        v.z = u.x;
+    }
+    if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
+        v.x = -u.y;
+        v.y = u.x;
+        v.z = 0;
+    }
+    w = crossProductVec3(u, v);
 
-        Matrix4 m = getIdentityMatrix(), mminus = getIdentityMatrix(), rx = getIdentityMatrix();
-        m.val[0][0] = u.x;
-        m.val[0][1] = u.y;
-        m.val[0][2] = u.z;
-        m.val[1][0] = v.x;
-        m.val[1][1] = v.y;
-        m.val[1][2] = v.z;
-        m.val[2][0] = w.x;
-        m.val[2][1] = w.y;
-        m.val[2][2] = w.z;
+    Matrix4 m = getIdentityMatrix(), mminus = getIdentityMatrix(), rx = getIdentityMatrix();
+    m.val[0][0] = u.x;
+    m.val[0][1] = u.y;
+    m.val[0][2] = u.z;
+    m.val[1][0] = v.x;
+    m.val[1][1] = v.y;
+    m.val[1][2] = v.z;
+    m.val[2][0] = w.x;
+    m.val[2][1] = w.y;
+    m.val[2][2] = w.z;
 
-        mminus.val[0][0] = u.x;
-        mminus.val[0][1] = v.x;
-        mminus.val[0][2] = w.x;
-        mminus.val[0][0] = u.y;
-        mminus.val[0][1] = v.x;
-        mminus.val[0][2] = w.x;
-        mminus.val[0][0] = u.z;
-        mminus.val[0][1] = v.x;
-        mminus.val[0][2] = w.x;
+    mminus.val[0][0] = u.x;
+    mminus.val[0][1] = v.x;
+    mminus.val[0][2] = w.x;
+    mminus.val[0][0] = u.y;
+    mminus.val[0][1] = v.x;
+    mminus.val[0][2] = w.x;
+    mminus.val[0][0] = u.z;
+    mminus.val[0][1] = v.x;
+    mminus.val[0][2] = w.x;
 
-        rx.val[1][1] = cos(angle);
-        rx.val[1][2] = -sin(angle);
-        rx.val[2][1] = sin(angle);
-        rx.val[2][2] = cos(angle);
+    rx.val[1][1] = cos(angle);
+    rx.val[1][2] = -sin(angle);
+    rx.val[2][1] = sin(angle);
+    rx.val[2][2] = cos(angle);
 
-        fin = multiplyMatrixWithMatrix(mminus, multiplyMatrixWithMatrix(rx, m));
-        return fin;
+    fin = multiplyMatrixWithMatrix(mminus, multiplyMatrixWithMatrix(rx, m));
+    return fin;
 }
 
 Matrix4 computeScalingMatrix(Scaling *s) {
