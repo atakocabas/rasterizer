@@ -30,9 +30,17 @@ Matrix4 ModelingTransformation(Mesh *mesh);
 void Scene::forwardRenderingPipeline(Camera *camera) {
     // TODO: Implement this function.
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
+    if (camera->projectionType == 0) {//ORTHOGRAPHIC
+        Matrix4 orthographicProjectionMatrix = calculateOrthographicProjection(camera);
+        camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthographicProjectionMatrix);
+    } else {
+
+    }
     for (auto &mesh: this->meshes) {
         Matrix4 transformed = ModelingTransformation(mesh);
         transformed = multiplyMatrixWithMatrix(camViewMatrix, transformed);
+
+
         for (auto &triangle: mesh->triangles) {
 
             //TODO: Check Ids if any range error thrown
@@ -49,6 +57,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
 
         }
+
+
     }
 }
 
