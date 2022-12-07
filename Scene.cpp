@@ -62,20 +62,7 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
     }
 }
 
-Matrix4 Scene::calculateOrthographicProjection(Camera *camera) {
-    Matrix4 orthographic_matrix = getIdentityMatrix();
 
-    //DONE: What if right-left = 0 -> Of course the plane would be a line if it happens!
-    orthographic_matrix.val[0][0] = 2 / (camera->right - camera->left);
-    orthographic_matrix.val[0][3] = -(camera->right + camera->left) / (camera->right - camera->left);
-    orthographic_matrix.val[1][1] = 2 / (camera->top - camera->bottom);
-    orthographic_matrix.val[1][3] = -(camera->top + camera->bottom) / (camera->top - camera->bottom);
-    orthographic_matrix.val[2][2] = -2 / (camera->far - camera->near);
-    orthographic_matrix.val[2][3] = -(camera->far + camera->near) / (camera->far - camera->near);
-
-    return orthographic_matrix;
-
-}
 
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
     Matrix4 modeledMatrix = getIdentityMatrix();

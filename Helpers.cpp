@@ -11,6 +11,33 @@
 
 using namespace std;
 
+Matrix4 calculatePerspectiveProjection(Camera* camera){
+    Matrix4 p2o = getIdentityMatrix();
+    Matrix4 ortoMatrix = calculateOrthographicProjection(camera);
+    p2o.val[0][0] = camera->near;
+    p2o.val[1][1] = camera->near;
+    p2o.val[2][2] = camera->far + camera->near;
+    p2o.val[2][3] = camera->far * camera->near;
+    p2o.val[3][2] = -1; p2o.val[3][3] = 0;
+
+    return multiplyMatrixWithMatrix(p2o, ortoMatrix);
+}
+
+Matrix4 calculateOrthographicProjection(Camera *camera) {
+    Matrix4 orthographic_matrix = getIdentityMatrix();
+
+    //DONE: What if right-left = 0 -> Of course the plane would be a line if it happens!
+    orthographic_matrix.val[0][0] = 2 / (camera->right - camera->left);
+    orthographic_matrix.val[0][3] = -(camera->right + camera->left) / (camera->right - camera->left);
+    orthographic_matrix.val[1][1] = 2 / (camera->top - camera->bottom);
+    orthographic_matrix.val[1][3] = -(camera->top + camera->bottom) / (camera->top - camera->bottom);
+    orthographic_matrix.val[2][2] = -2 / (camera->far - camera->near);
+    orthographic_matrix.val[2][3] = -(camera->far + camera->near) / (camera->far - camera->near);
+
+    return orthographic_matrix;
+
+}
+
 Matrix4 computeViewingTransformationMatrix(Camera* cam){
     Matrix4 res;
     Matrix4 t = getIdentityMatrix(), m = getIdentityMatrix();
@@ -35,6 +62,7 @@ Matrix4 computeTranslationMatrix(Translation *t) {
 
     return m;
 }
+
 Matrix4 computeRotationMatrix(Rotation* rotation) {
         Rotation *r = rotation;
         double angle = r->angle;

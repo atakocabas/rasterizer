@@ -45,7 +45,7 @@ public:
 	void convertPPMToPNG(string ppmFileName, int osType);
     Matrix4 ModelingTransformation(Mesh* mesh);
 	Matrix4 ViewingTransformation(Mesh *mesh);
-    Matrix4 calculateOrthographicProjection(Camera *camera);
+    
 };
 
 #endif
