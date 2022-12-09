@@ -19,32 +19,35 @@ Matrix4 calculateViewportMatrix(Camera *camera) {
     res.val[0][3] = ((camera->verRes - 1) / 2.0);
     res.val[1][1] = camera->horRes / 2.0;
     res.val[1][3] = ((camera->horRes - 1) / 2.0);
-    res.val[0][0] = 0.5;
-    res.val[0][0] = 0.5;
+    res.val[2][2] = 0.5;
+    res.val[2][3] = 0.5;
+
+    res.val[3][3] = 0;
 
     return res;
 }
 
-bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera* cam, Vec3 &v0new, Vec3 &v1new) {
+bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new) {
     double xmin = cam->left, xmax = cam->right, ymin = cam->bottom, ymax = cam->top, zmin = cam->near, zmax = cam->far;
     double te = 0.0, tl = 1.0;
     double dx = v1.x - v0.x, dy = v1.y - v0.y, dz = v1.z - v0.z;
     bool visible = false;
-    v0new = v0; v1new = v1;
+    v0new = v0;
+    v1new = v1;
 
-    if(isVisible(dx, xmin - v0.x, te, tl))
-        if(isVisible(-dx, v0.x - xmax, te, tl))
-            if(isVisible(dy, ymin - v0.y, te, tl))
-                if(isVisible(-dy, v0.y - ymax, te, tl))
-                    if(isVisible(dz, zmin - v0.z, te, tl))
-                        if(isVisible(-dz, v0.z - zmax, te, tl)){
+    if (isVisible(dx, xmin - v0.x, te, tl))
+        if (isVisible(-dx, v0.x - xmax, te, tl))
+            if (isVisible(dy, ymin - v0.y, te, tl))
+                if (isVisible(-dy, v0.y - ymax, te, tl))
+                    if (isVisible(dz, zmin - v0.z, te, tl))
+                        if (isVisible(-dz, v0.z - zmax, te, tl)) {
                             visible = true;
-                            if(tl < 1){
+                            if (tl < 1) {
                                 v1new.x = v0.x + dx * tl;
                                 v1new.y = v0.y + dy * tl;
                                 v1new.z = v0.z + dz * tl;
                             }
-                            if(te > 0){
+                            if (te > 0) {
                                 v0new.x = v0.x + dx * te;
                                 v0new.y = v0.y + dy * te;
                                 v0new.z = v0.z + dz * te;
@@ -53,19 +56,17 @@ bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera* cam, Vec3 &v0new, Vec3 &v1ne
     return visible;
 }
 
-bool isVisible(double den, double num, double &te, double &tl){
+bool isVisible(double den, double num, double &te, double &tl) {
     double t;
-    if(den > 0){
-        t = num/den;
-        if(t > tl) return false;
-        if(t > te) te = t;
-    }
-    else if(den < 0){
-        t = num/den;
-        if(t < te) return false;
-        if(t < tl) tl = t;
-    }
-    else if(num > 0) return false; // parallel line
+    if (den > 0) {
+        t = num / den;
+        if (t > tl) return false;
+        if (t > te) te = t;
+    } else if (den < 0) {
+        t = num / den;
+        if (t < te) return false;
+        if (t < tl) tl = t;
+    } else if (num > 0) return false; // parallel line
     else return true;
 }
 
@@ -89,12 +90,14 @@ Matrix4 calculatePerspectiveProjection(Camera *camera) {
     Matrix4 ortoMatrix = calculateOrthographicProjection(camera);
     p2o.val[0][0] = camera->near;
     p2o.val[1][1] = camera->near;
+
     p2o.val[2][2] = camera->far + camera->near;
     p2o.val[2][3] = camera->far * camera->near;
+
     p2o.val[3][2] = -1;
     p2o.val[3][3] = 0;
 
-    return multiplyMatrixWithMatrix(p2o, ortoMatrix);
+    return multiplyMatrixWithMatrix(ortoMatrix, p2o);
 }
 
 Matrix4 calculateOrthographicProjection(Camera *camera) {
@@ -103,8 +106,10 @@ Matrix4 calculateOrthographicProjection(Camera *camera) {
     //DONE: What if right-left = 0 -> Of course the plane would be a line if it happens!
     orthographic_matrix.val[0][0] = 2 / (camera->right - camera->left);
     orthographic_matrix.val[0][3] = -(camera->right + camera->left) / (camera->right - camera->left);
+
     orthographic_matrix.val[1][1] = 2 / (camera->top - camera->bottom);
     orthographic_matrix.val[1][3] = -(camera->top + camera->bottom) / (camera->top - camera->bottom);
+
     orthographic_matrix.val[2][2] = -2 / (camera->far - camera->near);
     orthographic_matrix.val[2][3] = -(camera->far + camera->near) / (camera->far - camera->near);
 

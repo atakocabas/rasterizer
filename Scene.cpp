@@ -44,17 +44,19 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
     vector<vector<Vec3>> allNewVertex;
     vector<Vec3> meshVertex;
+    Matrix4 orthPerspectiveProjectionMatrix;
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     if (camera->projectionType == 0) {//ORTHOGRAPHIC
-        Matrix4 orthographicProjectionMatrix = calculateOrthographicProjection(camera);
-        camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthographicProjectionMatrix);
+         orthPerspectiveProjectionMatrix = calculateOrthographicProjection(camera);
+        orthPerspectiveProjectionMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthPerspectiveProjectionMatrix);
     } else {
         Matrix4 perspectiveProjectionMatrix = calculatePerspectiveProjection(camera);
-        camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, perspectiveProjectionMatrix);
+        orthPerspectiveProjectionMatrix = multiplyMatrixWithMatrix(camViewMatrix, perspectiveProjectionMatrix);
     }
+    Matrix4 viewportTransformationMatrix = calculateViewportMatrix(camera);
     for (auto &mesh: this->meshes) {
         Matrix4 modelingViewMatrix = ModelingTransformation(mesh);
-        //transformed = multiplyMatrixWithMatrix(camViewMatrix, transformed);
+        modelingViewMatrix = multiplyMatrixWithMatrix(orthPerspectiveProjectionMatrix, multiplyMatrixWithMatrix(camViewMatrix,modelingViewMatrix));
 
         for (auto &triangle: mesh->triangles) {
 
