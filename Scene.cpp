@@ -21,13 +21,13 @@ using namespace tinyxml2;
 using namespace std;
 
 /*
-	Transformations, clipping, culling, rasterization are done here.
-	You may define helper functions.
+    Transformations, clipping, culling, rasterization are done here.
+    You may define helper functions.
 */
 Matrix4 ModelingTransformation(Mesh *mesh);
 
-
-void Scene::forwardRenderingPipeline(Camera *camera) {
+void Scene::forwardRenderingPipeline(Camera *camera)
+{
     // TODO: Implement this function.
     /*  Matrix4 viewportMatrix = computeViewingTransformationMatrix(camera);
 
@@ -40,7 +40,6 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
       }
       camViewMatrix = multiplyMatrixWithMatrix(viewportMatrix, camViewMatrix);
       */
-
 
     vector<vector<Vec3>> allNewVertex;
     vector<Vec3> meshVertex;
@@ -58,55 +57,72 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
         Matrix4 modelingViewMatrix = ModelingTransformation(mesh);
         modelingViewMatrix = multiplyMatrixWithMatrix(orthPerspectiveProjectionMatrix, multiplyMatrixWithMatrix(camViewMatrix,modelingViewMatrix));
 
-        for (auto &triangle: mesh->triangles) {
+        for (auto &triangle : mesh->triangles)
+        {
+            for (auto &vertex_id : triangle.vertexIds)
+            {
+                // TODO: Check Ids if any range error thrown
+                Vec3 *new_vertex = this->vertices[vertex_id - 1];
+                Vec4 vertex = {
+                    new_vertex->x,
+                    new_vertex->y,
+                    new_vertex->z,
+                    1,
+                    new_vertex->colorId,
+                };
 
-            //TODO: Check Ids if any range error thrown
-            Vec3 *new_vertex = this->vertices[triangle.getFirstVertexId() - 1];
+                vertex = multiplyMatrixWithVec4(modelingViewMatrix, vertex);
+                vertex.x = vertex.x / vertex.t;
+                vertex.y = vertex.y / vertex.t;
+                vertex.z = vertex.z / vertex.t;
+                vertex.t = 1;
 
-            Vec4 vertex = {
-                    new_vertex->x, new_vertex->y, new_vertex->z, 1, new_vertex->colorId,
-            };
-            vertex = multiplyMatrixWithVec4(modelingViewMatrix, vertex);
-            Vec3 mshVertex = {
-                    new_vertex->x, new_vertex->y, new_vertex->z, new_vertex->colorId,
-            };
-            meshVertex.push_back(mshVertex);
+                Vec3 mshVertex = {
+                    new_vertex->x,
+                    new_vertex->y,
+                    new_vertex->z,
+                    new_vertex->colorId,
+                };
+                meshVertex.push_back(mshVertex);
+            }
         }
         allNewVertex.push_back(meshVertex);
-
     }
 }
 
-
-Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
+Matrix4 Scene::ModelingTransformation(Mesh *mesh)
+{
     Matrix4 modeledMatrix = getIdentityMatrix();
     Matrix4 preComputedMatrix = getIdentityMatrix();
 
-    for (int i = 0; i < mesh->numberOfTransformations; i++) {
-        switch (mesh->transformationTypes[i]) {
-            case 'r':
-                preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix,modeledMatrix );
-                break;
-            case 't':
-                preComputedMatrix = computeTranslationMatrix(
-                        this->translations[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix,modeledMatrix );
-                break;
-            case 's':
-                preComputedMatrix = computeScalingMatrix(this->scalings[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix, modeledMatrix);
-                break;
+    for (int i = 0; i < mesh->numberOfTransformations; i++)
+    {
+        switch (mesh->transformationTypes[i])
+        {
+        case 'r':
+            preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i] - 1]);
+            modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix, modeledMatrix);
+            break;
+        case 't':
+            preComputedMatrix = computeTranslationMatrix(
+                this->translations[mesh->transformationIds[i] - 1]);
+            modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix, modeledMatrix);
+            break;
+        case 's':
+            preComputedMatrix = computeScalingMatrix(this->scalings[mesh->transformationIds[i] - 1]);
+            modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix, modeledMatrix);
+            break;
         }
     }
     return modeledMatrix;
 }
 
 /*
-	Parses XML file
+    Parses XML file
 */
 Scene::Scene(
-        const char *xmlPath) {
+    const char *xmlPath)
+{
     const char *str;
     XMLDocument xmlDoc;
     XMLElement *pElement;
@@ -122,12 +138,16 @@ Scene::Scene(
 
     // read culling
     pElement = pRoot->FirstChildElement("Culling");
-    if (pElement != NULL) {
+    if (pElement != NULL)
+    {
         str = pElement->GetText();
 
-        if (strcmp(str, "enabled") == 0) {
+        if (strcmp(str, "enabled") == 0)
+        {
             cullingEnabled = true;
-        } else {
+        }
+        else
+        {
             cullingEnabled = false;
         }
     }
@@ -136,7 +156,8 @@ Scene::Scene(
     pElement = pRoot->FirstChildElement("Cameras");
     XMLElement *pCamera = pElement->FirstChildElement("Camera");
     XMLElement *camElement;
-    while (pCamera != NULL) {
+    while (pCamera != NULL)
+    {
         Camera *cam = new Camera();
 
         pCamera->QueryIntAttribute("id", &cam->cameraId);
@@ -144,9 +165,12 @@ Scene::Scene(
         // read projection type
         str = pCamera->Attribute("type");
 
-        if (strcmp(str, "orthographic") == 0) {
+        if (strcmp(str, "orthographic") == 0)
+        {
             cam->projectionType = 0;
-        } else {
+        }
+        else
+        {
             cam->projectionType = 1;
         }
 
@@ -190,7 +214,8 @@ Scene::Scene(
     XMLElement *pVertex = pElement->FirstChildElement("Vertex");
     int vertexId = 1;
 
-    while (pVertex != NULL) {
+    while (pVertex != NULL)
+    {
         Vec3 *vertex = new Vec3();
         Color *color = new Color();
 
@@ -213,7 +238,8 @@ Scene::Scene(
     // read translations
     pElement = pRoot->FirstChildElement("Translations");
     XMLElement *pTranslation = pElement->FirstChildElement("Translation");
-    while (pTranslation != NULL) {
+    while (pTranslation != NULL)
+    {
         Translation *translation = new Translation();
 
         pTranslation->QueryIntAttribute("id", &translation->translationId);
@@ -229,7 +255,8 @@ Scene::Scene(
     // read scalings
     pElement = pRoot->FirstChildElement("Scalings");
     XMLElement *pScaling = pElement->FirstChildElement("Scaling");
-    while (pScaling != NULL) {
+    while (pScaling != NULL)
+    {
         Scaling *scaling = new Scaling();
 
         pScaling->QueryIntAttribute("id", &scaling->scalingId);
@@ -244,7 +271,8 @@ Scene::Scene(
     // read rotations
     pElement = pRoot->FirstChildElement("Rotations");
     XMLElement *pRotation = pElement->FirstChildElement("Rotation");
-    while (pRotation != NULL) {
+    while (pRotation != NULL)
+    {
         Rotation *rotation = new Rotation();
 
         pRotation->QueryIntAttribute("id", &rotation->rotationId);
@@ -261,7 +289,8 @@ Scene::Scene(
 
     XMLElement *pMesh = pElement->FirstChildElement("Mesh");
     XMLElement *meshElement;
-    while (pMesh != NULL) {
+    while (pMesh != NULL)
+    {
         Mesh *mesh = new Mesh();
 
         pMesh->QueryIntAttribute("id", &mesh->meshId);
@@ -269,9 +298,12 @@ Scene::Scene(
         // read projection type
         str = pMesh->Attribute("type");
 
-        if (strcmp(str, "wireframe") == 0) {
+        if (strcmp(str, "wireframe") == 0)
+        {
             mesh->type = 0;
-        } else {
+        }
+        else
+        {
             mesh->type = 1;
         }
 
@@ -279,7 +311,8 @@ Scene::Scene(
         XMLElement *pTransformations = pMesh->FirstChildElement("Transformations");
         XMLElement *pTransformation = pTransformations->FirstChildElement("Transformation");
 
-        while (pTransformation != NULL) {
+        while (pTransformation != NULL)
+        {
             char transformationType;
             int transformationId;
 
@@ -303,10 +336,12 @@ Scene::Scene(
         clone_str = strdup(str);
 
         row = strtok(clone_str, "\n");
-        while (row != NULL) {
+        while (row != NULL)
+        {
             int result = sscanf(row, "%d %d %d", &v1, &v2, &v3);
 
-            if (result != EOF) {
+            if (result != EOF)
+            {
                 mesh->triangles.push_back(Triangle(v1, v2, v3));
             }
             row = strtok(NULL, "\n");
@@ -319,22 +354,30 @@ Scene::Scene(
 }
 
 /*
-	Initializes image with background color
+    Initializes image with background color
 */
-void Scene::initializeImage(Camera *camera) {
-    if (this->image.empty()) {
-        for (int i = 0; i < camera->horRes; i++) {
+void Scene::initializeImage(Camera *camera)
+{
+    if (this->image.empty())
+    {
+        for (int i = 0; i < camera->horRes; i++)
+        {
             vector<Color> rowOfColors;
 
-            for (int j = 0; j < camera->verRes; j++) {
+            for (int j = 0; j < camera->verRes; j++)
+            {
                 rowOfColors.push_back(this->backgroundColor);
             }
 
             this->image.push_back(rowOfColors);
         }
-    } else {
-        for (int i = 0; i < camera->horRes; i++) {
-            for (int j = 0; j < camera->verRes; j++) {
+    }
+    else
+    {
+        for (int i = 0; i < camera->horRes; i++)
+        {
+            for (int j = 0; j < camera->verRes; j++)
+            {
                 this->image[i][j].r = this->backgroundColor.r;
                 this->image[i][j].g = this->backgroundColor.g;
                 this->image[i][j].b = this->backgroundColor.b;
@@ -344,22 +387,24 @@ void Scene::initializeImage(Camera *camera) {
 }
 
 /*
-	If given value is less than 0, converts value to 0.
-	If given value is more than 255, converts value to 255.
-	Otherwise returns value itself.
+    If given value is less than 0, converts value to 0.
+    If given value is more than 255, converts value to 255.
+    Otherwise returns value itself.
 */
-int Scene::makeBetweenZeroAnd255(double value) {
+int Scene::makeBetweenZeroAnd255(double value)
+{
     if (value >= 255.0)
         return 255;
     if (value <= 0.0)
         return 0;
-    return (int) (value);
+    return (int)(value);
 }
 
 /*
-	Writes contents of image (Color**) into a PPM file.
+    Writes contents of image (Color**) into a PPM file.
 */
-void Scene::writeImageToPPMFile(Camera *camera) {
+void Scene::writeImageToPPMFile(Camera *camera)
+{
     ofstream fout;
 
     fout.open(camera->outputFileName.c_str());
@@ -369,8 +414,10 @@ void Scene::writeImageToPPMFile(Camera *camera) {
     fout << camera->horRes << " " << camera->verRes << endl;
     fout << "255" << endl;
 
-    for (int j = camera->verRes - 1; j >= 0; j--) {
-        for (int i = 0; i < camera->horRes; i++) {
+    for (int j = camera->verRes - 1; j >= 0; j--)
+    {
+        for (int i = 0; i < camera->horRes; i++)
+        {
             fout << makeBetweenZeroAnd255(this->image[i][j].r) << " "
                  << makeBetweenZeroAnd255(this->image[i][j].g) << " "
                  << makeBetweenZeroAnd255(this->image[i][j].b) << " ";
@@ -381,27 +428,31 @@ void Scene::writeImageToPPMFile(Camera *camera) {
 }
 
 /*
-	Converts PPM image in given path to PNG file, by calling ImageMagick's 'convert' command.
-	os_type == 1 		-> Ubuntu
-	os_type == 2 		-> Windows
-	os_type == other	-> No conversion
+    Converts PPM image in given path to PNG file, by calling ImageMagick's 'convert' command.
+    os_type == 1 		-> Ubuntu
+    os_type == 2 		-> Windows
+    os_type == other	-> No conversion
 */
-void Scene::convertPPMToPNG(string ppmFileName, int osType) {
+void Scene::convertPPMToPNG(string ppmFileName, int osType)
+{
     string command;
 
     // call command on Ubuntu
-    if (osType == 1) {
+    if (osType == 1)
+    {
         command = "convert " + ppmFileName + " " + ppmFileName + ".png";
         system(command.c_str());
     }
 
-        // call command on Windows
-    else if (osType == 2) {
+    // call command on Windows
+    else if (osType == 2)
+    {
         command = "magick convert " + ppmFileName + " " + ppmFileName + ".png";
         system(command.c_str());
     }
 
-        // default action - don't do conversion
-    else {
+    // default action - don't do conversion
+    else
+    {
     }
 }
