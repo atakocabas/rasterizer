@@ -10,6 +10,7 @@
 #include <vector>
 
 using namespace std;
+#define PI 3.14159265
 
 Matrix4 calculateViewportMatrix(Camera *camera) {
     Matrix4 res = getIdentityMatrix();
@@ -115,7 +116,7 @@ Matrix4 computeViewingTransformationMatrix(Camera *cam) {
     m.val[0][2] = cam->u.z;
     m.val[1][0] = cam->v.x;
     m.val[1][1] = cam->v.y;
-    m.val[2][2] = cam->v.z;
+    m.val[1][2] = cam->v.z;
     m.val[2][0] = cam->w.x;
     m.val[2][1] = cam->w.y;
     m.val[2][2] = cam->w.z;
@@ -136,61 +137,53 @@ Matrix4 computeTranslationMatrix(Translation *t) {
 Matrix4 computeRotationMatrix(Rotation *rotation) {
     Rotation *r = rotation;
     double angle = r->angle;
-    Vec3 u(r->ux, r->uy, r->uz, 0), v, w;
+    Vec3 u(r->ux, r->uy, r->uz, 0);
     Matrix4 fin;
 
-    if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
-        v.x = 0;
-        v.y = -u.z;
-        v.z = u.y;
-    }
-    if (abs(u.y) <= abs(u.x) && abs(u.y) <= abs(u.z)) {
+    double temp_min = abs(u.x);
+    Vec3 v = Vec3(0, -u.z, u.y, -1);
+
+    if (abs(u.y) < temp_min) {
+        temp_min = abs(u.y);
         v.x = -u.z;
         v.y = 0;
         v.z = u.x;
-    }
-    if (abs(u.x) <= abs(u.y) && abs(u.x) <= abs(u.z)) {
+    } else if (abs(u.z) < temp_min) {
         v.x = -u.y;
         v.y = u.x;
         v.z = 0;
     }
-    w = crossProductVec3(u, v);
+    v = normalizeVec3(v);
+    Vec3 w = crossProductVec3(u, v);
+    double M[4][4] = {{u.x, u.y, u.z, 0},
+                      {v.x, v.y, v.z, 0},
+                      {w.x, w.y, w.z, 0},
+                      {0,   0,   0,   1}};
 
-    Matrix4 m = getIdentityMatrix(), mminus = getIdentityMatrix(), rx = getIdentityMatrix();
-    m.val[0][0] = u.x;
-    m.val[0][1] = u.y;
-    m.val[0][2] = u.z;
-    m.val[1][0] = v.x;
-    m.val[1][1] = v.y;
-    m.val[1][2] = v.z;
-    m.val[2][0] = w.x;
-    m.val[2][1] = w.y;
-    m.val[2][2] = w.z;
+    double inverse_M[4][4] = {{u.x, v.x, w.x, 0},
+                              {u.y, v.y, w.y, 0},
+                              {u.z, v.z, w.z, 0},
+                              {0,   0,   0,   1}};
 
-    mminus.val[0][0] = u.x;
-    mminus.val[0][1] = v.x;
-    mminus.val[0][2] = w.x;
-    mminus.val[0][0] = u.y;
-    mminus.val[0][1] = v.x;
-    mminus.val[0][2] = w.x;
-    mminus.val[0][0] = u.z;
-    mminus.val[0][1] = v.x;
-    mminus.val[0][2] = w.x;
+    double theta = rotation->angle * (PI / 180.0);
+    double R_x[4][4] = {{1, 0,          0,           0},
+                        {0, cos(theta), -sin(theta), 0},
+                        {0, sin(theta), cos(theta),  0},
+                        {0, 0,          0,           1}};
 
-    rx.val[1][1] = cos(angle);
-    rx.val[1][2] = -sin(angle);
-    rx.val[2][1] = sin(angle);
-    rx.val[2][2] = cos(angle);
 
-    fin = multiplyMatrixWithMatrix(mminus, multiplyMatrixWithMatrix(rx, m));
+    Matrix4 r_x_m;
+    r_x_m = multiplyMatrixWithMatrix(Matrix4(R_x), Matrix4(M));
+    fin = multiplyMatrixWithMatrix(Matrix4(inverse_M), r_x_m);
+
     return fin;
 }
 
 Matrix4 computeScalingMatrix(Scaling *s) {
     Matrix4 m = getIdentityMatrix();
-    m.val[0][3] = s->sx;
-    m.val[1][3] = s->sy;
-    m.val[2][3] = s->sz;
+    m.val[0][0] = s->sx;
+    m.val[1][1] = s->sy;
+    m.val[2][2] = s->sz;
 
     return m;
 }

@@ -29,9 +29,22 @@ Matrix4 ModelingTransformation(Mesh *mesh);
 
 void Scene::forwardRenderingPipeline(Camera *camera) {
     // TODO: Implement this function.
-    Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
-    Matrix4 viewportMatrix = computeViewingTransformationMatrix(camera);
+    /*  Matrix4 viewportMatrix = computeViewingTransformationMatrix(camera);
 
+      if (camera->projectionType == 0) {//ORTHOGRAPHIC
+          Matrix4 orthographicProjectionMatrix = calculateOrthographicProjection(camera);
+          camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthographicProjectionMatrix);
+      } else {
+          Matrix4 perspectiveProjectionMatrix = calculatePerspectiveProjection(camera);
+          camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, perspectiveProjectionMatrix);
+      }
+      camViewMatrix = multiplyMatrixWithMatrix(viewportMatrix, camViewMatrix);
+      */
+
+
+    vector<vector<Vec3>> allNewVertex;
+    vector<Vec3> meshVertex;
+    Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     if (camera->projectionType == 0) {//ORTHOGRAPHIC
         Matrix4 orthographicProjectionMatrix = calculateOrthographicProjection(camera);
         camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthographicProjectionMatrix);
@@ -39,10 +52,9 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
         Matrix4 perspectiveProjectionMatrix = calculatePerspectiveProjection(camera);
         camViewMatrix = multiplyMatrixWithMatrix(camViewMatrix, perspectiveProjectionMatrix);
     }
-    camViewMatrix = multiplyMatrixWithMatrix(viewportMatrix, camViewMatrix);
     for (auto &mesh: this->meshes) {
-        Matrix4 transformed = ModelingTransformation(mesh);
-        transformed = multiplyMatrixWithMatrix(camViewMatrix, transformed);
+        Matrix4 modelingViewMatrix = ModelingTransformation(mesh);
+        //transformed = multiplyMatrixWithMatrix(camViewMatrix, transformed);
 
         for (auto &triangle: mesh->triangles) {
 
@@ -52,13 +64,14 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
             Vec4 vertex = {
                     new_vertex->x, new_vertex->y, new_vertex->z, 1, new_vertex->colorId,
             };
-            vertex = multiplyMatrixWithVec4(transformed, vertex);
-
-            new_vertex->x = vertex.x;
-            new_vertex->y = vertex.y;
-            new_vertex->z = vertex.z;
-
+            vertex = multiplyMatrixWithVec4(modelingViewMatrix, vertex);
+            Vec3 mshVertex = {
+                    new_vertex->x, new_vertex->y, new_vertex->z, new_vertex->colorId,
+            };
+            meshVertex.push_back(mshVertex);
         }
+        allNewVertex.push_back(meshVertex);
+
     }
 }
 
@@ -71,16 +84,16 @@ Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
         switch (mesh->transformationTypes[i]) {
             case 'r':
                 preComputedMatrix = computeRotationMatrix(this->rotations[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
+                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix,modeledMatrix );
                 break;
             case 't':
                 preComputedMatrix = computeTranslationMatrix(
                         this->translations[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
+                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix,modeledMatrix );
                 break;
             case 's':
                 preComputedMatrix = computeScalingMatrix(this->scalings[mesh->transformationIds[i] - 1]);
-                modeledMatrix = multiplyMatrixWithMatrix(modeledMatrix, preComputedMatrix);
+                modeledMatrix = multiplyMatrixWithMatrix(preComputedMatrix, modeledMatrix);
                 break;
         }
     }
