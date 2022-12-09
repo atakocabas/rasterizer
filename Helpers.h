@@ -12,6 +12,10 @@
 #include "Rotation.h"
 #include "Camera.h"
 
+bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera* cam, Vec3 &v0new, Vec3 &v1new);
+
+bool isVisible(double den, double num, double &te, double &tl);
+
 Matrix4 calculateViewportMatrix(Camera*);
 
 Matrix4 calculatePerspectiveProjection(Camera* camera);

@@ -21,43 +21,52 @@ Matrix4 calculateViewportMatrix(Camera *camera) {
     res.val[1][3] = ((camera->horRes - 1) / 2.0);
     res.val[0][0] = 0.5;
     res.val[0][0] = 0.5;
+
+    return res;
 }
 
-bool isVisible(float den, float num, float t_e, float t_l) {
-    float t = num / den;
-    if (den > 0)//potentially entering
-    {
-        t = num / den;
-        if (t > t_l) {
-            return false;
-        }
-        if (t > t_e) {
-            t_e = t;
-        }
-    } else if (den < 0) {
-        t = num / den;
-        if (t < t_e) {
-            return false;
-
-        }
-        if (t < t_l) {
-            t_l = t;
-        }
-    } else if (num > 0) {
-        return false;
-    }
-    return true;
-
-}
-
-void LiangBarskyAlgorithm() {
-    float t_e = 0;
-
-    float t_l = 1;
+bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera* cam, Vec3 &v0new, Vec3 &v1new) {
+    double xmin = cam->left, xmax = cam->right, ymin = cam->bottom, ymax = cam->top, zmin = cam->near, zmax = cam->far;
+    double te = 0.0, tl = 1.0;
+    double dx = v1.x - v0.x, dy = v1.y - v0.y, dz = v1.z - v0.z;
     bool visible = false;
-    //float dx =
-    //if (isVisible())
+    v0new = v0; v1new = v1;
 
+    if(isVisible(dx, xmin - v0.x, te, tl))
+        if(isVisible(-dx, v0.x - xmax, te, tl))
+            if(isVisible(dy, ymin - v0.y, te, tl))
+                if(isVisible(-dy, v0.y - ymax, te, tl))
+                    if(isVisible(dz, zmin - v0.z, te, tl))
+                        if(isVisible(-dz, v0.z - zmax, te, tl)){
+                            visible = true;
+                            if(tl < 1){
+                                v1new.x = v0.x + dx * tl;
+                                v1new.y = v0.y + dy * tl;
+                                v1new.z = v0.z + dz * tl;
+                            }
+                            if(te > 0){
+                                v0new.x = v0.x + dx * te;
+                                v0new.y = v0.y + dy * te;
+                                v0new.z = v0.z + dz * te;
+                            }
+                        }
+    return visible;
+}
+
+bool isVisible(double den, double num, double &te, double &tl){
+    double t;
+    if(den > 0){
+        t = num/den;
+        if(t > tl) return false;
+        if(t > te) te = t;
+    }
+    else if(den < 0){
+        t = num/den;
+        if(t < te) return false;
+        if(t < tl) tl = t;
+    }
+    else if(num > 0) return false; // parallel line
+    else return true;
 }
 
 Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3) {
