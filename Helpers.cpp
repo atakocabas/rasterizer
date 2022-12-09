@@ -32,8 +32,13 @@ bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1ne
     double te = 0.0, tl = 1.0;
     double dx = v1.x - v0.x, dy = v1.y - v0.y, dz = v1.z - v0.z;
     bool visible = false;
-    v0new = v0;
-    v1new = v1;
+    v0new.x = v0.x;
+    v0new.y = v0.y;
+    v0new.z = v0.z;
+
+    v1new.x = v1.x;
+    v1new.y = v1.y;
+    v1new.z = v1.z;
 
     if (isVisible(dx, xmin - v0.x, te, tl))
         if (isVisible(-dx, v0.x - xmax, te, tl))
@@ -67,7 +72,7 @@ bool isVisible(double den, double num, double &te, double &tl) {
         if (t < te) return false;
         if (t < tl) tl = t;
     } else if (num > 0) return false; // parallel line
-    else return true;
+    return true;
 }
 
 Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3) {

@@ -41,7 +41,7 @@ void Scene::forwardRenderingPipeline(Camera *camera)
       camViewMatrix = multiplyMatrixWithMatrix(viewportMatrix, camViewMatrix);
       */
 
-    vector<vector<Vec3>> allNewVertex;
+    vector< vector<Vec3> > allNewVertex;
     vector<Vec3> meshVertex;
     Matrix4 orthPerspectiveProjectionMatrix;
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
@@ -87,6 +87,10 @@ void Scene::forwardRenderingPipeline(Camera *camera)
             }
         }
         allNewVertex.push_back(meshVertex);
+    }
+
+    for(auto &mesh: this->meshes){
+        
     }
 }
 
