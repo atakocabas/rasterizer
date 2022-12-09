@@ -46,10 +46,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     if (camera->projectionType == 0) {//ORTHOGRAPHIC
         orthPerspectiveProjectionMatrix = calculateOrthographicProjection(camera);
-        orthPerspectiveProjectionMatrix = multiplyMatrixWithMatrix(camViewMatrix, orthPerspectiveProjectionMatrix);
     } else {
-        Matrix4 perspectiveProjectionMatrix = calculatePerspectiveProjection(camera);
-        orthPerspectiveProjectionMatrix = multiplyMatrixWithMatrix(camViewMatrix, perspectiveProjectionMatrix);
+        orthPerspectiveProjectionMatrix = calculatePerspectiveProjection(camera);
     }
     Matrix4 viewportTransformationMatrix = calculateViewportMatrix(camera);
     for (auto &mesh: this->meshes) {
@@ -75,12 +73,14 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                 vertex.z = vertex.z / vertex.t;
                 vertex.t = 1;
 
+                //ViewPort here?
                 Vec3 mshVertex = {
                         new_vertex->x,
                         new_vertex->y,
                         new_vertex->z,
                         new_vertex->colorId,
                 };
+                //ViewPort here?
                 meshVertex.push_back(mshVertex);
             }
         }
