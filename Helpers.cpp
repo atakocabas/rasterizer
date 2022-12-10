@@ -12,6 +12,10 @@
 using namespace std;
 #define PI 3.14159265
 
+int culling(int i, Camera* cam, Triangle t, vector< vector<Vec3> > cameraview){
+    
+}
+
 Matrix4 calculateViewportMatrix(Camera *camera) {
     Matrix4 res = getIdentityMatrix();
 

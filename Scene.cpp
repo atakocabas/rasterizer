@@ -115,9 +115,17 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
 
     }
-
-    for (auto &mesh: this->meshes) {
-
+    bool checkCulling = this->cullingEnabled;
+    for (int i=0; i < meshes.size(); ++i) {
+        int mesh_type = meshes[i]->type;
+        for(int j=0; j < meshes[i]->numberOfTriangles; ++j){
+            if(checkCulling && culling(i, camera, meshes[i]->triangles.at(j), allNewVertex))
+                continue;
+            
+            // MID POINT
+            if(mesh_type == 0)
+            // RASTERIZATION
+        }
     }
 }
 
