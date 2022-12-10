@@ -157,6 +157,32 @@ int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
 
+/*
+ * void rasterizeTriangle(Point p1, Point p2, Point p3, Color color) {
+  // Get the bounding box of the triangle
+  int minX = std::min(p1.x, std::min(p2.x, p3.x));
+  int maxX = std::max(p1.x, std::max(p2.x, p3.x));
+  int minY = std::min(p1.y, std::min(p2.y, p3.y));
+  int maxY = std::max(p1.y, std::max(p2.y, p3.y));
+
+  // Loop over the bounding box and check if each point is inside the triangle
+  for (int y = minY; y <= maxY; y++) {
+    for (int x = minX; x <= maxX; x++) {
+      Point p = {x, y};
+      // Use barycentric coordinates to check if the point is inside the triangle
+      float w1 = ((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y)) /
+                 ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
+      float w2 = ((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y)) /
+                 ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
+      float w3 = 1 - w1 - w2;
+      if (w1 >= 0 && w1 <= 1 && w2 >= 0 && w2 <= 1 && w3 >= 0 && w3 <= 1) {
+        // The point is inside the triangle, so set the pixel color
+        setPixelColor(x, y, color);
+      }
+    }
+  }
+}
+ */
 void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp) {
 
 
