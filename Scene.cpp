@@ -183,6 +183,58 @@ int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
   }
 }
  */
+/*
+ * void drawLine(Point p1, Point p2, Color color) {
+  int dx = p2.x - p1.x;
+  int dy = p2.y - p1.y;
+
+  // Calculate the slope of the line
+  float m = (float)dy / dx;
+
+  // Check if the line is steep
+  if (std::abs(m) > 1) {
+    // If the line is steep, swap the x and y coordinates
+    std::swap(p1.x, p1.y);
+    std::swap(p2.x, p2.y);
+    std::swap(dx, dy);
+
+    // Recalculate the slope
+    m = (float)dy / dx;
+  }
+
+  // Check if the line has a negative slope
+  if (p1.x > p2.x) {
+    // If the line has a negative slope, swap the points
+    std::swap(p1, p2);
+  }
+
+  // Calculate the midpoint of the line
+  int d = dy - m * dx;
+  int y = p1.y;
+
+  // Loop over the x-coordinates of the line
+  for (int x = p1.x; x <= p2.x; x++) {
+    // Check if the line is steep
+    if (std::abs(m) > 1) {
+      // If the line is steep, swap the x and y coordinates
+      setPixelColor(y, x, color);
+    } else {
+      // If the line is not steep, draw the pixel with the original coordinates
+      setPixelColor(x, y, color);
+    }
+
+    // Check if the midpoint is above or below the line
+    if (d < 0) {
+      // If the midpoint is below the line, move to the next pixel in the y-direction
+      y++;
+      d += dy;
+    } else {
+      // If the midpoint is above or on the line, move to the next pixel in the x-direction
+      d -= dx;
+    }
+  }
+}
+ */
 void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp) {
 
 
