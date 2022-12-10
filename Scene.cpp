@@ -77,16 +77,43 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
                 //ViewPort here?
                 Vec3 mshVertex = {
-                        new_vertex->x,
-                        new_vertex->y,
-                        new_vertex->z,
-                        new_vertex->colorId,
+                        vertex.x,
+                        vertex.y,
+                        vertex.z,
+                        vertex.colorId,
+                };
+
+                int k, l;
+                double total;
+
+
+                Vec3 mshVertexWithVp = {
+                        //vertex ile viewport matrixi çarpacağız.
+                        (vertex.x * viewportTransformationMatrix.val[0][0]) +
+                        (vertex.y * viewportTransformationMatrix.val[0][1]) +
+                        (vertex.z * viewportTransformationMatrix.val[0][2]) +
+                        (vertex.t * viewportTransformationMatrix.val[0][3]),
+
+                        ((vertex.x * viewportTransformationMatrix.val[1][0]) +
+                        (vertex.y * viewportTransformationMatrix.val[1][1]) +
+                        (vertex.z * viewportTransformationMatrix.val[1][2]) +
+                        (vertex.t * viewportTransformationMatrix.val[1][3])),
+
+                        ((vertex.x * viewportTransformationMatrix.val[2][0]) +
+                        (vertex.y * viewportTransformationMatrix.val[2][1]) +
+                        (vertex.z * viewportTransformationMatrix.val[2][2]) +
+                        (vertex.t * viewportTransformationMatrix.val[2][3])),
+                        vertex.colorId,
                 };
                 //ViewPort here?
                 meshVertex.push_back(mshVertex);
+                meshVertexWithVp.push_back(mshVertexWithVp);
             }
         }
         allNewVertex.push_back(meshVertex);
+        allNewVertexWithVp.push_back(meshVertexWithVp);
+
+
     }
 
     for (auto &mesh: this->meshes) {
