@@ -13,6 +13,10 @@
 #include "Triangle.h"
 #include "Camera.h"
 
+void swapVec3(Vec3& a, Vec3& b);
+
+double calculateSlope(const Vec3& v0, const Vec3& v1);
+
 int culling(int, int, Camera*, vector< vector<Vec3> >);
 
 bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera* cam, Vec3 &v0new, Vec3 &v1new);

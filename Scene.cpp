@@ -126,7 +126,7 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                 continue;
 
             // MID POINT
-
+            midPoint(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
             // RASTERIZATION
             if (mesh_type == 1) {
                 rasterization(i, j, allNewVertexWithVp);
@@ -192,6 +192,46 @@ void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp)
             }
         }
     }
+}
+
+void midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertices){
+    Vec3 v0 = vpvertices[i][j];
+    Vec3 v1 = vpvertices[i][j+1];
+    Vec3 v2 = vpvertices[i][j+2];
+    double m;
+
+    vector<Vec3> temp = {v0, v1, v2};
+
+    for(int k=0; k < 3; ++k){
+        Vec3 a = temp[k];
+        Vec3 b = temp[(k+1)%3];
+
+        Vec3 aclipped, bclipped;
+        LiangBarskyAlgorithm(a, b, cam, aclipped, bclipped);
+        if(areEqualVec3(aclipped, bclipped)) continue;
+
+        m = calculateSlope(aclipped, bclipped);
+        if(m == 0) continue;
+        if(m < 0){
+            swapVec3(a, b);
+            m = abs(m);
+        }
+
+        if(m < 1){
+            int x = a.x;
+            int y = a.y;
+
+            double M = (double)(a.y - b.y) + 0.5 * (b.x-a.x);
+            for(; x < int(b.x) && x < cam->horRes && x >= 0 && y < cam->verRes && y >= 0; x++){
+                draw(x, y, a, b);
+            }
+        }
+    }
+
+}
+
+void draw(int x, int y, Vec3 a, Vec3 b) {
+    
 }
 
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
