@@ -26,6 +26,7 @@ using namespace std;
 */
 Matrix4 ModelingTransformation(Mesh *mesh);
 
+
 void Scene::forwardRenderingPipeline(Camera *camera) {
     // TODO: Implement this function.
     /*  Matrix4 viewportMatrix = computeViewingTransformationMatrix(camera);
@@ -40,8 +41,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
       camViewMatrix = multiplyMatrixWithMatrix(viewportMatrix, camViewMatrix);
       */
 
-    vector<vector<Vec3> > allNewVertex;
-    vector<vector<Vec3> > allNewVertexWithVp;
+    vector<vector<Vec3>> allNewVertex;
+    vector<vector<Vec3>> allNewVertexWithVp;
     vector<Vec3> meshVertex;
     vector<Vec3> meshVertexWithVp;
     Matrix4 orthPerspectiveProjectionMatrix;
@@ -95,14 +96,14 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                         (vertex.t * viewportTransformationMatrix.val[0][3]),
 
                         ((vertex.x * viewportTransformationMatrix.val[1][0]) +
-                        (vertex.y * viewportTransformationMatrix.val[1][1]) +
-                        (vertex.z * viewportTransformationMatrix.val[1][2]) +
-                        (vertex.t * viewportTransformationMatrix.val[1][3])),
+                         (vertex.y * viewportTransformationMatrix.val[1][1]) +
+                         (vertex.z * viewportTransformationMatrix.val[1][2]) +
+                         (vertex.t * viewportTransformationMatrix.val[1][3])),
 
                         ((vertex.x * viewportTransformationMatrix.val[2][0]) +
-                        (vertex.y * viewportTransformationMatrix.val[2][1]) +
-                        (vertex.z * viewportTransformationMatrix.val[2][2]) +
-                        (vertex.t * viewportTransformationMatrix.val[2][3])),
+                         (vertex.y * viewportTransformationMatrix.val[2][1]) +
+                         (vertex.z * viewportTransformationMatrix.val[2][2]) +
+                         (vertex.t * viewportTransformationMatrix.val[2][3])),
                         vertex.colorId,
                 };
                 //ViewPort here?
@@ -113,18 +114,82 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
         allNewVertex.push_back(meshVertex);
         allNewVertexWithVp.push_back(meshVertexWithVp);
 
+        //ROUNDING to set its pixel in vp
+
 
     }
     bool checkCulling = this->cullingEnabled;
-    for (int i=0; i < meshes.size(); ++i) {
+    for (int i = 0; i < meshes.size(); ++i) {
         int mesh_type = meshes[i]->type;
-        for(int j=0; j < meshes[i]->numberOfTriangles * 3; j+=3){
-            if(checkCulling && culling(i, j, camera, allNewVertex))
+        for (int j = 0; j < meshes[i]->numberOfTriangles * 3; j += 3) {
+            if (checkCulling && culling(i, j, camera, allNewVertex))
                 continue;
-            
+
             // MID POINT
 
             // RASTERIZATION
+            if (mesh_type == 1) {
+                rasterization(i, j, allNewVertexWithVp);
+            }
+
+        }
+    }
+
+}
+
+int smallest(int x, int y, int z) {
+    return min(min(x, y), z);
+}
+
+int largest(int x, int y, int z) {
+    return max(max(x, y), z);
+}
+
+int f_01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
+    return x * (y_0 - y_1) + y * (x_1 - x_0) + x_0 * y_1 - y_0 * x_1;
+}
+
+int f_12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
+    return x * (y_1 - y_2) + y * (x_2 - x_1) + x_1 * y_2 - y_1 * x_2;
+}
+
+int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
+    return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
+}
+
+void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp) {
+
+
+    int x_0 = allNewVertexWithVp[i][j].x;
+    int x_1 = allNewVertexWithVp[i][j + 1].x;
+    int x_2 = allNewVertexWithVp[i][j + 2].x;
+
+    int y_0 = allNewVertexWithVp[i][j].y;
+    int y_1 = allNewVertexWithVp[i][j + 1].y;
+    int y_2 = allNewVertexWithVp[i][j + 2].y;
+
+    Color *c0 = this->colorsOfVertices[allNewVertexWithVp[i][j].colorId - 1];
+    Color *c1 = this->colorsOfVertices[allNewVertexWithVp[i][j + 1].colorId - 1];
+    Color *c2 = this->colorsOfVertices[allNewVertexWithVp[i][j + 2].colorId - 1];
+
+
+    int x_min = smallest(x_0, x_1, x_2);
+    int y_min = smallest(y_0, y_1, y_2);
+
+    int x_max = largest(x_0, x_1, x_2);
+    int y_max = largest(y_0, y_1, y_2);
+
+    for (int y = y_min; y <= y_max; y++) {
+        for (int x = x_min; x <= x_max; x++) {
+            double alpha = (double) f_12(x, y, x_1, y_1, x_2, y_2) / (double) f_12(x_0, y_0, x_1, y_1, x_2, y_2);
+            double beta = (double) f_20(x, y, x_0, y_0, x_2, y_2) / (double) f_20(x_1, y_1, x_0, y_0, x_2, y_2);
+            double gama = (double) f_01(x, y, x_0, y_0, x_1, y_1) / (double) f_01(x_2, y_2, x_0, y_0, x_1, y_1);
+
+            if (alpha >= 0 && beta >= 0 && gama >= 0) {
+                image[x][y].r = alpha * c0->r + beta * c1->r + gama * c2->r;
+                image[x][y].g = alpha * c0->g + beta * c1->g + gama * c2->g;
+                image[x][y].b = alpha * c0->b + beta * c1->b + gama * c2->b;
+            }
         }
     }
 }

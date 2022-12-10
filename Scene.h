@@ -45,7 +45,8 @@ public:
 	void convertPPMToPNG(string ppmFileName, int osType);
     Matrix4 ModelingTransformation(Mesh* mesh);
 	Matrix4 ViewingTransformation(Mesh *mesh);
-    
+    void rasterization(int, int, vector<vector<Vec3>>);
+
 };
 
 #endif
