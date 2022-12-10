@@ -125,11 +125,11 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
             if (checkCulling && culling(i, j, camera, allNewVertex))
                 continue;
 
-            // MID POINT
-            midPoint(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
-            // RASTERIZATION
+            // MID POINT            // RASTERIZATION
             if (mesh_type == 1) {
                 rasterization(i, j, allNewVertexWithVp);
+            } else {
+                midPoint(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
             }
 
         }
@@ -156,33 +156,6 @@ int f_12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
 int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
-
-/*
- * void rasterizeTriangle(Point p1, Point p2, Point p3, Color color) {
-  // Get the bounding box of the triangle
-  int minX = std::min(p1.x, std::min(p2.x, p3.x));
-  int maxX = std::max(p1.x, std::max(p2.x, p3.x));
-  int minY = std::min(p1.y, std::min(p2.y, p3.y));
-  int maxY = std::max(p1.y, std::max(p2.y, p3.y));
-
-  // Loop over the bounding box and check if each point is inside the triangle
-  for (int y = minY; y <= maxY; y++) {
-    for (int x = minX; x <= maxX; x++) {
-      Point p = {x, y};
-      // Use barycentric coordinates to check if the point is inside the triangle
-      float w1 = ((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y)) /
-                 ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
-      float w2 = ((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y)) /
-                 ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
-      float w3 = 1 - w1 - w2;
-      if (w1 >= 0 && w1 <= 1 && w2 >= 0 && w2 <= 1 && w3 >= 0 && w3 <= 1) {
-        // The point is inside the triangle, so set the pixel color
-        setPixelColor(x, y, color);
-      }
-    }
-  }
-}
- */
 /*
  * void drawLine(Point p1, Point p2, Color color) {
   int dx = p2.x - p1.x;
@@ -272,7 +245,7 @@ void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp)
     }
 }
 
-void midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertices){
+void Scene::midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertices){
     Vec3 v0 = vpvertices[i][j];
     Vec3 v1 = vpvertices[i][j+1];
     Vec3 v2 = vpvertices[i][j+2];
@@ -287,29 +260,64 @@ void midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertic
         Vec3 aclipped, bclipped;
         LiangBarskyAlgorithm(a, b, cam, aclipped, bclipped);
         if(areEqualVec3(aclipped, bclipped)) continue;
-
-        m = calculateSlope(aclipped, bclipped);
+        a = aclipped; b = bclipped;
+        m = calculateSlope(a, b);
         if(m == 0) continue;
-        if(m < 0){
-            swapVec3(a, b);
-            m = abs(m);
+        if(std::abs(m) > 1){
+            std::swap(a.x, a.y);
+            std::swap(b.x, b.y);
+            m = calculateSlope(a, b);
         }
+        if(m < 0){
+            std::swap(a, b);
+        }
+        int x = a.x;
+        int y = a.y;
 
-        if(m < 1){
-            int x = a.x;
-            int y = a.y;
-
-            double M = (double)(a.y - b.y) + 0.5 * (b.x-a.x);
+        if(m < 1){ // if angle is less than 45
+            double d = 2.0 * (a.y - b.y) + 1.0 * (b.x-a.x);
             for(; x < int(b.x) && x < cam->horRes && x >= 0 && y < cam->verRes && y >= 0; x++){
                 draw(x, y, a, b);
+                if(d < 0){ // choose NE
+                    y++;
+                    d += 2.0 * ((a.y - b.y) + (b.x - a.x));
+                } else { // choose E
+                    d += 2.0 * (a.x - b.y);
+                }
             }
         }
     }
 
 }
 
-void draw(int x, int y, Vec3 a, Vec3 b) {
-    
+void Scene::draw(int x, int y, Vec3 a, Vec3 b) {
+    double alphaX = (x - a.x) / (b.x - a.x);
+	double alphaY = (y - a.y) / (b.y - a.y);
+
+	Color *color_a = colorsOfVertices[a.colorId - 1];
+	Color *color_b = colorsOfVertices[b.colorId - 1];
+	double cX_r = (1 - alphaX) * (color_a->r) + alphaX * color_b->r;
+	double cX_g = (1 - alphaX) * (color_a->g) + alphaX * color_b->g;
+	double cX_b = (1 - alphaX) * (color_a->b) + alphaX * color_b->b;
+
+	if (cX_r > 255)
+		cX_r = 255;
+	else if (cX_r < 0)
+		cX_r = 0;
+	if (cX_g > 255)
+		cX_g = 255;
+	else if (cX_g < 0)
+		cX_g = 0;
+	if (cX_b > 255)
+		cX_b = 255;
+	else if (cX_b < 0)
+		cX_b = 0;
+
+	Color c = Color(cX_r, cX_g, cX_b);
+
+	image[x][y].r = c.r;
+	image[x][y].g = c.g;
+	image[x][y].b = c.b;
 }
 
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
