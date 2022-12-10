@@ -41,7 +41,9 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
       */
 
     vector<vector<Vec3> > allNewVertex;
+    vector<vector<Vec3> > allNewVertexWithVp;
     vector<Vec3> meshVertex;
+    vector<Vec3> meshVertexWithVp;
     Matrix4 orthPerspectiveProjectionMatrix;
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     if (camera->projectionType == 0) {//ORTHOGRAPHIC
