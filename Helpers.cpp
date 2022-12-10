@@ -12,6 +12,22 @@
 using namespace std;
 #define PI 3.14159265
 
+
+void swapVec3(Vec3& a, Vec3& b){
+    Vec3 tmp(a);
+    a.x = b.x;
+    a.y = b.y;
+    a.z = b.z;
+
+    b.x = tmp.x;
+    b.y = tmp.y;
+    b.z = tmp.z;
+}
+
+double calculateSlope(const Vec3& v0, const Vec3& v1){
+    return (v1.y - v0.y) / (v1.x - v0.x);
+}
+
 int culling(int i, int j, Camera* cam, vector< vector<Vec3> > cameraview){
     Vec3 v0 = cameraview[i][j];
     Vec3 v1 = cameraview[i][j+1];
