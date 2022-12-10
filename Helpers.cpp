@@ -125,7 +125,6 @@ Matrix4 calculateOrthographicProjection(Camera *camera) {
 Matrix4 computeViewingTransformationMatrix(Camera *cam) {
     Matrix4 res;
     Matrix4 t = getIdentityMatrix(), m = getIdentityMatrix();
-
     t.val[0][3] = -cam->pos.x;
     t.val[1][3] = -cam->pos.y;
     t.val[2][3] = -cam->pos.z;
