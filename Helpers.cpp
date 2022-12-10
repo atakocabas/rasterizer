@@ -12,8 +12,16 @@
 using namespace std;
 #define PI 3.14159265
 
-int culling(int i, Camera* cam, Triangle t, vector< vector<Vec3> > cameraview){
-    
+int culling(int i, int j, Camera* cam, vector< vector<Vec3> > cameraview){
+    Vec3 v0 = cameraview[i][j];
+    Vec3 v1 = cameraview[i][j+1];
+    Vec3 v2 = cameraview[i][j+2];
+
+    Vec3 eye = subtractVec3(cam->pos, v0);
+    Vec3 normal = crossProductVec3(subtractVec3(v1, v0), subtractVec3(v2, v0));
+
+    if(dotProductVec3(eye, normal) > 0) return 1;
+    else return 0;
 }
 
 Matrix4 calculateViewportMatrix(Camera *camera) {

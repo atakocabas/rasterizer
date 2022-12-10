@@ -118,12 +118,12 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
     bool checkCulling = this->cullingEnabled;
     for (int i=0; i < meshes.size(); ++i) {
         int mesh_type = meshes[i]->type;
-        for(int j=0; j < meshes[i]->numberOfTriangles; ++j){
-            if(checkCulling && culling(i, camera, meshes[i]->triangles.at(j), allNewVertex))
+        for(int j=0; j < meshes[i]->numberOfTriangles * 3; j+=3){
+            if(checkCulling && culling(i, j, camera, allNewVertex))
                 continue;
             
             // MID POINT
-            if(mesh_type == 0)
+
             // RASTERIZATION
         }
     }
