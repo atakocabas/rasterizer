@@ -227,15 +227,18 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         if(!isVisible) continue;
         a = aclipped;
         b = bclipped;
+        if((int) a.x > cam->verRes) a.x = cam->verRes-1;
+        if((int) a.y > cam->horRes) a.x = cam->horRes-1;
+        if((int) a.x < 0) a.x = 0;
+        if((int) a.y < 0) a.y = 0;
+
+        if((int) b.x > cam->verRes) b.x = cam->verRes-1;
+        if((int) b.y > cam->horRes) b.x = cam->horRes-1;
+        if((int) b.x < 0) b.x = 0;
+        if((int) b.y < 0) b.y = 0;
+
         double y_1 = b.y, y_0 = a.y, x_1 = b.x, x_0 = a.x;
-        // m = calculateSlope(a, b);
-        // if (m == 0)
-        //     continue;
-        // m = calculateSlope(a, b);
-        // x = a.x;
-        // y = a.y;
         double m = (double)(y_1 - y_0) / (double)(x_1 - x_0);
-        double alpha = abs(x_1 - x_0);
 
         if (0.0 < m && m < 1.0)
         {
