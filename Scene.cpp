@@ -264,6 +264,7 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
     Vec3 v1 = vpvertices[i][j + 1];
     Vec3 v2 = vpvertices[i][j + 2];
     double m;
+    Camera c = *cam;
 
     vector<Vec3> temp = {v0, v1, v2};
 
@@ -282,49 +283,176 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         m = (double)dy / (double)dx;
         if (m == 0)
             continue;
-        if (std::abs(m) > 1)
-        {
-            std::swap(a.x, a.y);
-            std::swap(b.x, b.y);
-            std::swap(dx, dy);
-            m = (double)dy / dx;
-        }
-        if (m < 0)
-        {
-            std::swap(a, b);
-        }
-
-        if(a.x>b.x){
-            swap(a,b);
-        }
-        int d = (double)dy - m *  (double)dx;
+        dy = b.y - a.y;
+        dx = b.x - a.x;
+        m = dy / dx;
+        int d = (a.y - b.y) + 0.5 * (b.x - a.x);
         int y = a.y;
-        for (int x = a.x; x <= b.x; x++)
-        {
-            if (std::abs(m) > 1)
-            {
-                // If the line is steep, swap the x and y coordinates
-                draw(y, x, a, b);
-            }
-            else
-            {
-                // If the line is not steep, draw the pixel with the original coordinates
-                draw(x, y, a, b);
-            }
-
-            // Check if the midpoint is above or below the line
-            if (d < 0)
-            {
-                // If the midpoint is below the line, move to the next pixel in the y-direction
-                y++;
-                d += dy;
-            }
-            else
-            {
-                // If the midpoint is above or on the line, move to the next pixel in the x-direction
-                d -= dx;
-            }
-        }
+        if ((b.y - a.y) >= 0 && (b.x - a.x) >= 0)
+		{ // 1.çeyrek
+			if (m > 0 && m <= 1)
+			{ //1.bölge
+				int x = a.x;
+				int y = a.y;
+				// y=a.y;
+				double M = 1.0 * (a.y - b.y) + 0.5 * (b.x - a.x);
+				for (x = a.x; x < int(b.x) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; x = x + 1)
+				{
+					draw(x, y, a, b);
+					if (M < 0)
+					{ // NE
+						y += 1;
+						M += ((a.y - b.y) + (b.x - a.x));
+					}
+					else
+					{ // E
+						M += (a.y - b.y);
+					}
+				}
+			}
+			else if (m > 1)
+			{ //2.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = 0.5 * (a.y - b.y) + 1.0 * (b.x - a.x);
+				for (y = a.y; y < int(b.y) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; y = y + 1)
+				{
+					draw(x, y, a, b);
+					if (M <= 0)
+					{ // N
+						M += (b.x - a.x);
+					}
+					else
+					{ // NE
+						x += 1;
+						M += ((a.y - b.y) + (b.x - a.x));
+					}
+				}
+			}
+		}
+		else if ((b.y - a.y) > 0 && (b.x - a.x) < 0) // 2.çeyrek
+		{
+			if (m < -1)
+			{ //2.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = -0.5 * (a.y - b.y) + 1.0 * (b.x - a.x);
+				for (y = a.y; y < int(b.y) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; y = y + 1)
+				{
+					draw(x, y, a, b);
+					if (M > 0)
+					{ // N
+						M += ((b.x - a.x));
+					}
+					else
+					{ // NW
+						x -= 1;
+						M += (-(a.y - b.y) + (b.x - a.x));
+					}
+				}
+			}
+			else if (m < 0 && m >= -1)
+			{ // 1.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = -1.0 * (a.y - b.y) + 0.5 * (b.x - a.x);
+				for (x = a.x; x > int(b.x) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; x = x - 1)
+				{
+					draw(x, y, a, b);
+					if (M > 0)
+					{ // NW
+						y += 1;
+						M += (-(a.y - b.y) + (b.x - a.x));
+					}
+					else
+					{ // W
+						M += (-(a.y - b.y));
+					}
+				}
+			}
+		}
+		else if ((b.y - a.y) <= 0 && (b.x - a.x) <= 0) // 3.çeyrek
+		{
+			if (m > 1)
+			{ // 2.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = -0.5 * (a.y - b.y) - 1.0 * (b.x - a.x);
+				for (y = a.y; y > int(b.y) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; y = y - 1)
+				{
+					draw(x, y, a, b);
+					if (M > 0)
+					{ // SW
+						x -= 1;
+						M += (-(a.y - b.y) - (b.x - a.x));
+					}
+					else
+					{ // S
+						M += (-(b.x - a.x));
+					}
+				}
+			}
+			else if (m > 0 && m <= 1)
+			{ //1.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = -1.0 * (a.y - b.y) - 0.5 * (b.x - a.x);
+				for (x = a.x; x > int(b.x) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; x = x - 1)
+				{
+					draw(x, y, a, b);
+					if (M > 0)
+					{ // W
+						M += (-(a.y - b.y));
+					}
+					else
+					{ // SW
+						y -= 1;
+						M += (-(a.y - b.y) - (b.x - a.x));
+					}
+				}
+			}
+		}
+		else if ((b.y - a.y) < 0 && (b.x - a.x) > 0) //4.çeyrek
+		{
+			if (m < 0 && m >= -1)
+			{ //1.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = 1.0 * (a.y - b.y) - 0.5 * (b.x - a.x);
+				for (x = a.x; x < int(b.x) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; x = x + 1)
+				{
+					draw(x, y, a, b);
+					if (M <= 0)
+					{ // E
+						M += ((a.y - b.y));
+					}
+					else
+					{ // SE
+						y -= 1;
+						M += ((a.y - b.y) - (b.x - a.x));
+					}
+				}
+			}
+			else if (m < -1)
+			{ //2.bölge
+				int x = a.x;
+				int y = a.y;
+				double M = 0.5 * (a.y - b.y) - 1.0 * (b.x - a.x);
+				for (y = a.y; y > int(b.y) && x < c.horRes && x >= 0 && y < c.verRes && y >= 0; y = y - 1)
+				{
+					draw(x, y, a, b);
+					if (M < 0)
+					{ // SE
+						x += 1;
+						M += ((a.y - b.y) - (b.x - a.x));
+					}
+					else
+					{ // S
+						M += (-(b.x - a.x));
+					}
+				}
+			}
+		}
     }
 }
 
