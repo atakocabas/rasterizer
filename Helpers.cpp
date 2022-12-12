@@ -24,8 +24,15 @@ void swapVec3(Vec3& a, Vec3& b){
     b.z = tmp.z;
 }
 
-double calculateSlope(const Vec3& v0, const Vec3& v1){
-    return (v1.y - v0.y) / (v1.x - v0.x);
+double calculateSlope(const Vec3 &a, const Vec3 &b)
+{
+
+	if (a.x != b.x)
+		return (a.y - b.y) / (a.x - b.x);
+	else
+	{
+		return __DBL_MAX__;
+	}
 }
 
 int culling(int i, int j, Camera* cam, vector< vector<Vec3> > cameraview){

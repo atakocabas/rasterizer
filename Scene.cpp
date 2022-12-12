@@ -279,15 +279,9 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
             continue;
         a = aclipped;
         b = bclipped;
-        int dy = b.y - a.y, dx = b.x - a.x;
-        m = (double)dy / (double)dx;
+        m = calculateSlope(a, b);
         if (m == 0)
             continue;
-        dy = b.y - a.y;
-        dx = b.x - a.x;
-        m = dy / dx;
-        int d = (a.y - b.y) + 0.5 * (b.x - a.x);
-        int y = a.y;
         if ((b.y - a.y) >= 0 && (b.x - a.x) >= 0)
 		{ // 1.çeyrek
 			if (m > 0 && m <= 1)
