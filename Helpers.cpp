@@ -63,10 +63,12 @@ bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1ne
     v0new.x = v0.x;
     v0new.y = v0.y;
     v0new.z = v0.z;
+    v0new.colorId = v0.colorId;
 
     v1new.x = v1.x;
     v1new.y = v1.y;
     v1new.z = v1.z;
+    v1new.colorId = v1.colorId;
 
     if (isVisible(dx, xmin - v0.x, te, tl))
         if (isVisible(-dx, v0.x - xmax, te, tl))
