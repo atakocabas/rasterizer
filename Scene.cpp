@@ -279,7 +279,7 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         a = aclipped;
         b = bclipped;
         int dy = b.y - a.y, dx = b.x - a.x;
-        m = dy / dx;
+        m = (double)dy / (double)dx;
         if (m == 0)
             continue;
         if (std::abs(m) > 1)
@@ -294,7 +294,10 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
             std::swap(a, b);
         }
 
-        int d = dy - m * dx;
+        if(a.x>b.x){
+            swap(a,b);
+        }
+        int d = (double)dy - m *  (double)dx;
         int y = a.y;
         for (int x = a.x; x <= b.x; x++)
         {
