@@ -12,8 +12,8 @@
 using namespace std;
 #define PI 3.14159265
 
-
-void swapVec3(Vec3& a, Vec3& b){
+void swapVec3(Vec3 &a, Vec3 &b)
+{
     Vec3 tmp(a);
     a.x = b.x;
     a.y = b.y;
@@ -27,27 +27,31 @@ void swapVec3(Vec3& a, Vec3& b){
 double calculateSlope(const Vec3 &a, const Vec3 &b)
 {
 
-	if (a.x != b.x)
-		return (a.y - b.y) / (a.x - b.x);
-	else
-	{
-		return __DBL_MAX__;
-	}
+    if (a.x != b.x)
+        return (a.y - b.y) / (a.x - b.x);
+    else
+    {
+        return __DBL_MAX__;
+    }
 }
 
-int culling(int i, int j, Camera* cam, vector< vector<Vec3> > cameraview){
+int culling(int i, int j, Camera *cam, vector<vector<Vec3>> cameraview)
+{
     Vec3 v0 = cameraview[i][j];
-    Vec3 v1 = cameraview[i][j+1];
-    Vec3 v2 = cameraview[i][j+2];
+    Vec3 v1 = cameraview[i][j + 1];
+    Vec3 v2 = cameraview[i][j + 2];
 
     Vec3 eye = subtractVec3(cam->pos, v0);
     Vec3 normal = crossProductVec3(subtractVec3(v1, v0), subtractVec3(v2, v0));
 
-    if(dotProductVec3(eye, normal) > 0) return 1;
-    else return 0;
+    if (dotProductVec3(eye, normal) > 0)
+        return 1;
+    else
+        return 0;
 }
 
-Matrix4 calculateViewportMatrix(Camera *camera) {
+Matrix4 calculateViewportMatrix(Camera *camera)
+{
     Matrix4 res = getIdentityMatrix();
 
     res.val[0][0] = camera->verRes / 2.0;
@@ -62,72 +66,82 @@ Matrix4 calculateViewportMatrix(Camera *camera) {
     return res;
 }
 
-bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new) {
-    double xmin = cam->left, xmax = cam->right, ymin = cam->bottom, ymax = cam->top, zmin = cam->near, zmax = cam->far;
+bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new)
+{
     double te = 0.0, tl = 1.0;
-    double dx = v1.x - v0.x, dy = v1.y - v0.y, dz = v1.z - v0.z;
+    double dx = v1.x - v0.x, dy = v1.y - v0.y;
     bool visible = false;
     v0new.x = v0.x;
     v0new.y = v0.y;
-    v0new.z = v0.z;
     v0new.colorId = v0.colorId;
 
     v1new.x = v1.x;
     v1new.y = v1.y;
-    v1new.z = v1.z;
     v1new.colorId = v1.colorId;
 
-    if (isVisible(dx, xmin - v0.x, te, tl))
-        if (isVisible(-dx, v0.x - xmax, te, tl))
-            if (isVisible(dy, ymin - v0.y, te, tl))
-                if (isVisible(-dy, v0.y - ymax, te, tl))
-                    if (isVisible(dz, zmin - v0.z, te, tl))
-                        if (isVisible(-dz, v0.z - zmax, te, tl)) {
-                            visible = true;
-                            if (tl < 1) {
-                                v1new.x = v0.x + dx * tl;
-                                v1new.y = v0.y + dy * tl;
-                                v1new.z = v0.z + dz * tl;
-                            }
-                            if (te > 0) {
-                                v0new.x = v0.x + dx * te;
-                                v0new.y = v0.y + dy * te;
-                                v0new.z = v0.z + dz * te;
-                            }
-                        }
+    if (isVisible(dx, 0 - v0.x, te, tl))
+        if (isVisible(-dx, v0.x - cam->verRes, te, tl))
+            if (isVisible(dy, 0 - v0.y, te, tl))
+                if (isVisible(-dy, v0.y - cam->horRes, te, tl))
+                {
+                    visible = true;
+                    if (tl < 1)
+                    {
+                        v1new.x = v0.x + dx * tl;
+                        v1new.y = v0.y + dy * tl;
+                    }
+                    if (te > 0)
+                    {
+                        v0new.x = v0.x + dx * te;
+                        v0new.y = v0.y + dy * te;
+                    }
+                }
     return visible;
 }
 
-bool isVisible(double den, double num, double &te, double &tl) {
+bool isVisible(double den, double num, double &te, double &tl)
+{
     double t;
-    if (den > 0) {
+    if (den > 0)
+    {
         t = num / den;
-        if (t > tl) return false;
-        if (t > te) te = t;
-    } else if (den < 0) {
+        if (t > tl)
+            return false;
+        if (t > te)
+            te = t;
+    }
+    else if (den < 0)
+    {
         t = num / den;
-        if (t < te) return false;
-        if (t < tl) tl = t;
-    } else if (num > 0) return false; // parallel line
+        if (t < te)
+            return false;
+        if (t < tl)
+            tl = t;
+    }
+    else if (num > 0)
+        return false; // parallel line
     return true;
 }
 
-Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3) {
+Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3)
+{
     Vec3 u = subtractVec3(v2, v1);
     Vec3 v = subtractVec3(v3, v1);
 
     return crossProductVec3(u, v);
 }
 
-bool IsTriangleVisible(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 viewerPosition) {
+bool IsTriangleVisible(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 viewerPosition)
+{
     Vec3 normal = ComputeTriangleNormal(v1, v2, v3);
     Vec3 toViewer = subtractVec3(viewerPosition, v1);
-// Check if a triangle is facing the viewer
+    // Check if a triangle is facing the viewer
 
     return dotProductVec3(normal, toViewer) > 0;
 }
 
-Matrix4 calculatePerspectiveProjection(Camera *camera) {
+Matrix4 calculatePerspectiveProjection(Camera *camera)
+{
     Matrix4 p2o = getIdentityMatrix();
     Matrix4 ortoMatrix = calculateOrthographicProjection(camera);
     p2o.val[0][0] = camera->near;
@@ -142,10 +156,11 @@ Matrix4 calculatePerspectiveProjection(Camera *camera) {
     return multiplyMatrixWithMatrix(ortoMatrix, p2o);
 }
 
-Matrix4 calculateOrthographicProjection(Camera *camera) {
+Matrix4 calculateOrthographicProjection(Camera *camera)
+{
     Matrix4 orthographic_matrix = getIdentityMatrix();
 
-    //DONE: What if right-left = 0 -> Of course the plane would be a line if it happens!
+    // DONE: What if right-left = 0 -> Of course the plane would be a line if it happens!
     orthographic_matrix.val[0][0] = 2 / (camera->right - camera->left);
     orthographic_matrix.val[0][3] = -(camera->right + camera->left) / (camera->right - camera->left);
 
@@ -156,10 +171,10 @@ Matrix4 calculateOrthographicProjection(Camera *camera) {
     orthographic_matrix.val[2][3] = -(camera->far + camera->near) / (camera->far - camera->near);
 
     return orthographic_matrix;
-
 }
 
-Matrix4 computeViewingTransformationMatrix(Camera *cam) {
+Matrix4 computeViewingTransformationMatrix(Camera *cam)
+{
     Matrix4 res;
     Matrix4 t = getIdentityMatrix(), m = getIdentityMatrix();
     t.val[0][3] = -cam->pos.x;
@@ -180,7 +195,8 @@ Matrix4 computeViewingTransformationMatrix(Camera *cam) {
     return res;
 }
 
-Matrix4 computeTranslationMatrix(Translation *t) {
+Matrix4 computeTranslationMatrix(Translation *t)
+{
     Matrix4 m = getIdentityMatrix();
     m.val[0][3] = t->tx;
     m.val[1][3] = t->ty;
@@ -189,7 +205,8 @@ Matrix4 computeTranslationMatrix(Translation *t) {
     return m;
 }
 
-Matrix4 computeRotationMatrix(Rotation *rotation) {
+Matrix4 computeRotationMatrix(Rotation *rotation)
+{
     Rotation *r = rotation;
     double angle = r->angle;
     Vec3 u(r->ux, r->uy, r->uz, 0);
@@ -198,12 +215,15 @@ Matrix4 computeRotationMatrix(Rotation *rotation) {
     double temp_min = abs(u.x);
     Vec3 v = Vec3(0, -u.z, u.y, -1);
 
-    if (abs(u.y) < temp_min) {
+    if (abs(u.y) < temp_min)
+    {
         temp_min = abs(u.y);
         v.x = -u.z;
         v.y = 0;
         v.z = u.x;
-    } else if (abs(u.z) < temp_min) {
+    }
+    else if (abs(u.z) < temp_min)
+    {
         v.x = -u.y;
         v.y = u.x;
         v.z = 0;
@@ -213,19 +233,18 @@ Matrix4 computeRotationMatrix(Rotation *rotation) {
     double M[4][4] = {{u.x, u.y, u.z, 0},
                       {v.x, v.y, v.z, 0},
                       {w.x, w.y, w.z, 0},
-                      {0,   0,   0,   1}};
+                      {0, 0, 0, 1}};
 
     double inverse_M[4][4] = {{u.x, v.x, w.x, 0},
                               {u.y, v.y, w.y, 0},
                               {u.z, v.z, w.z, 0},
-                              {0,   0,   0,   1}};
+                              {0, 0, 0, 1}};
 
     double theta = rotation->angle * (PI / 180.0);
-    double R_x[4][4] = {{1, 0,          0,           0},
+    double R_x[4][4] = {{1, 0, 0, 0},
                         {0, cos(theta), -sin(theta), 0},
-                        {0, sin(theta), cos(theta),  0},
-                        {0, 0,          0,           1}};
-
+                        {0, sin(theta), cos(theta), 0},
+                        {0, 0, 0, 1}};
 
     Matrix4 r_x_m;
     r_x_m = multiplyMatrixWithMatrix(Matrix4(R_x), Matrix4(M));
@@ -234,7 +253,8 @@ Matrix4 computeRotationMatrix(Rotation *rotation) {
     return fin;
 }
 
-Matrix4 computeScalingMatrix(Scaling *s) {
+Matrix4 computeScalingMatrix(Scaling *s)
+{
     Matrix4 m = getIdentityMatrix();
     m.val[0][0] = s->sx;
     m.val[1][1] = s->sy;
@@ -246,7 +266,8 @@ Matrix4 computeScalingMatrix(Scaling *s) {
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
  */
-Vec3 crossProductVec3(Vec3 a, Vec3 b) {
+Vec3 crossProductVec3(Vec3 a, Vec3 b)
+{
     Vec3 result;
 
     result.x = a.y * b.z - b.y * a.z;
@@ -259,21 +280,24 @@ Vec3 crossProductVec3(Vec3 a, Vec3 b) {
 /*
  * Calculate dot product of vec3 a, vec3 b and return resulting value.
  */
-double dotProductVec3(Vec3 a, Vec3 b) {
+double dotProductVec3(Vec3 a, Vec3 b)
+{
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /*
  * Find length (|v|) of vec3 v.
  */
-double magnitudeOfVec3(Vec3 v) {
+double magnitudeOfVec3(Vec3 v)
+{
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /*
  * Normalize the vec3 to make it unit vec3.
  */
-Vec3 normalizeVec3(Vec3 v) {
+Vec3 normalizeVec3(Vec3 v)
+{
     Vec3 result;
     double d;
 
@@ -288,7 +312,8 @@ Vec3 normalizeVec3(Vec3 v) {
 /*
  * Return -v (inverse of vec3 v)
  */
-Vec3 inverseVec3(Vec3 v) {
+Vec3 inverseVec3(Vec3 v)
+{
     Vec3 result;
     result.x = -v.x;
     result.y = -v.y;
@@ -300,7 +325,8 @@ Vec3 inverseVec3(Vec3 v) {
 /*
  * Add vec3 a to vec3 b and return resulting vec3 (a+b).
  */
-Vec3 addVec3(Vec3 a, Vec3 b) {
+Vec3 addVec3(Vec3 a, Vec3 b)
+{
     Vec3 result;
     result.x = a.x + b.x;
     result.y = a.y + b.y;
@@ -312,7 +338,8 @@ Vec3 addVec3(Vec3 a, Vec3 b) {
 /*
  * Subtract vec3 b from vec3 a and return resulting vec3 (a-b).
  */
-Vec3 subtractVec3(Vec3 a, Vec3 b) {
+Vec3 subtractVec3(Vec3 a, Vec3 b)
+{
     Vec3 result;
     result.x = a.x - b.x;
     result.y = a.y - b.y;
@@ -324,7 +351,8 @@ Vec3 subtractVec3(Vec3 a, Vec3 b) {
 /*
  * Multiply each element of vec3 with scalar.
  */
-Vec3 multiplyVec3WithScalar(Vec3 v, double c) {
+Vec3 multiplyVec3WithScalar(Vec3 v, double c)
+{
     Vec3 result;
     result.x = v.x * c;
     result.y = v.y * c;
@@ -336,7 +364,8 @@ Vec3 multiplyVec3WithScalar(Vec3 v, double c) {
 /*
  * Prints elements in a vec3. Can be used for debugging purposes.
  */
-void printVec3(Vec3 v) {
+void printVec3(Vec3 v)
+{
     cout << "(" << v.x << "," << v.y << "," << v.z << ")" << endl;
 }
 
@@ -345,27 +374,37 @@ void printVec3(Vec3 v) {
  * In case of equality, returns 1.
  * Otherwise, returns 0.
  */
-int areEqualVec3(Vec3 a, Vec3 b) {
+int areEqualVec3(Vec3 a, Vec3 b)
+{
 
     /* if x difference, y difference and z difference is smaller than threshold, then they are equal */
-    if ((ABS((a.x - b.x)) < EPSILON) && (ABS((a.y - b.y)) < EPSILON) && (ABS((a.z - b.z)) < EPSILON)) {
+    if ((ABS((a.x - b.x)) < EPSILON) && (ABS((a.y - b.y)) < EPSILON) && (ABS((a.z - b.z)) < EPSILON))
+    {
         return 1;
-    } else {
+    }
+    else
+    {
         return 0;
     }
 }
 
 /*
  * Returns an identity matrix (values on the diagonal are 1, others are 0).
-*/
-Matrix4 getIdentityMatrix() {
+ */
+Matrix4 getIdentityMatrix()
+{
     Matrix4 result;
 
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            if (i == j) {
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (i == j)
+            {
                 result.val[i][j] = 1.0;
-            } else {
+            }
+            else
+            {
                 result.val[i][j] = 0.0;
             }
         }
@@ -377,14 +416,18 @@ Matrix4 getIdentityMatrix() {
 /*
  * Multiply matrices m1 (Matrix4) and m2 (Matrix4) and return the result matrix r (Matrix4).
  */
-Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2) {
+Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2)
+{
     Matrix4 result;
     double total;
 
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
             total = 0;
-            for (int k = 0; k < 4; k++) {
+            for (int k = 0; k < 4; k++)
+            {
                 total += m1.val[i][k] * m2.val[k][j];
             }
 
@@ -398,13 +441,16 @@ Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2) {
 /*
  * Multiply matrix m (Matrix4) with vector v (vec4) and store the result in vector r (vec4).
  */
-Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v) {
+Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v)
+{
     double values[4];
     double total;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
+    {
         total = 0;
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < 4; j++)
+        {
             total += m.val[i][j] * v.getElementAt(j);
         }
         values[i] = total;
