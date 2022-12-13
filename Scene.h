@@ -26,8 +26,14 @@ class Scene
 public:
 	Color backgroundColor;
 	bool cullingEnabled;
+    enum REGION {
+        FIRST,
+        SECOND,
+        THIRD,
+        FOURTH
+    };
 
-	vector< vector<Color> > image;
+    vector< vector<Color> > image;
 	vector< Camera* > cameras;
 	vector< Vec3* > vertices;
 	vector< Color* > colorsOfVertices;
@@ -48,6 +54,7 @@ public:
     void rasterization(int, int, vector<vector<Vec3>>);
 	void midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertices);
 	void draw(int x, int y, Vec3 a, Vec3 b);
+	void drawLine( Vec3 a, Vec3 b,REGION region);
 };
 
 #endif

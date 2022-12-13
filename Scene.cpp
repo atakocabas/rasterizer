@@ -20,6 +20,7 @@
 using namespace tinyxml2;
 using namespace std;
 
+
 /*
     Transformations, clipping, culling, rasterization are done here.
     You may define helper functions.
@@ -139,6 +140,36 @@ int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
 
+void Scene::draw(int x, int y, Vec3 a, Vec3 b) {
+    double alphaX = (x - a.x) / (b.x - a.x);
+    double alphaY = (y - a.y) / (b.y - a.y);
+
+    Color *color_a = colorsOfVertices[a.colorId - 1];
+    Color *color_b = colorsOfVertices[b.colorId - 1];
+    double cX_r = (1 - alphaX) * (color_a->r) + alphaX * color_b->r;
+    double cX_g = (1 - alphaX) * (color_a->g) + alphaX * color_b->g;
+    double cX_b = (1 - alphaX) * (color_a->b) + alphaX * color_b->b;
+
+    if (cX_r > 255)
+        cX_r = 255;
+    else if (cX_r < 0)
+        cX_r = 0;
+    if (cX_g > 255)
+        cX_g = 255;
+    else if (cX_g < 0)
+        cX_g = 0;
+    if (cX_b > 255)
+        cX_b = 255;
+    else if (cX_b < 0)
+        cX_b = 0;
+
+    Color c = Color(cX_r, cX_g, cX_b);
+
+    image[x][y].r = c.r;
+    image[x][y].g = c.g;
+    image[x][y].b = c.b;
+}
+
 void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp) {
 
     int x_0 = allNewVertexWithVp[i][j].x;
@@ -174,6 +205,81 @@ void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp)
     }
 }
 
+void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
+    int x_from = from.x;
+    int x_to = to.x;
+    int y_from = from.y;
+    int y_to = to.y;
+
+    if (FIRST == region) {
+        int x_current = x_from;
+        double test = (x_from - x_to) + 0.5 * (y_from - y_to);
+
+        for (int y_current = y_from; y_current > y_to; --y_current) {
+            draw(x_current, y_current, from, to);
+
+            if (test < 0) {
+                x_current += 1;
+                test += (x_from - x_to) + (y_from - y_to);
+            } else {
+                test += (x_from - x_to);
+            }
+
+            /*color_current.r += color_diff.r;
+            color_current.g += color_diff.g;
+            color_current.b += color_diff.b;*/
+        }
+    } else if (SECOND == region) {
+        int y_current = y_from;
+        double test = (y_to - y_from) + 0.5 * (x_to - x_from);
+
+        for (int x_current = x_from; x_current < x_to; ++x_current) {
+            draw(x_current, y_current, from, to);
+
+            if (test < 0) {
+                y_current -= 1;
+                test += (y_to - y_from) + (x_to - x_from);
+            } else {
+                test += (y_to - y_from);
+            }
+
+
+        }
+    } else if (THIRD == region) {
+        int y_current = y_from;
+        double test = (y_from - y_to) + 0.5 * (x_to - x_from);
+
+        for (int x_current = x_from; x_current < x_to; ++x_current) {
+            draw(x_current, y_current, from, to);
+            if (test < 0) {
+                y_current += 1;
+                test += (y_from - y_to) + (x_to - x_from);
+            } else {
+                test += (y_from - y_to);
+            }
+        }
+    }
+    else if(FOURTH == region){
+        int x_current = x_from;
+        double test = (x_from - x_to) + 0.5 * (y_to - y_from);
+
+        for (int y_current = y_from; y_current < y_to; ++y_current) {
+            draw(x_current, y_current, from,to);
+
+            if (test < 0) {
+                x_current += 1;
+                test += (x_from - x_to) + (y_to - y_from);
+            } else {
+                test += (x_from - x_to);
+            }
+
+
+        }
+    }
+
+
+}
+
 void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpvertices) {
     Vec3 v0 = vpvertices[i][j];
     Vec3 v1 = vpvertices[i][j + 1];
@@ -205,159 +311,41 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         if ((int) b.y < 0) b.y = 0;
 
 
-        double x0 = a.x;
-        double y0 = a.y;
-        double x1 = b.x;
-        double y1 = b.y;
-
-        double dx = x1 - x0;
-        double dy = y1 - y0;
-
-        int x_0 = a.x;
-        int x_1 = b.x;
-        int y_0 = a.y;
-        int y_1 = b.y;
-        m = (double) (y_1 - y_0) / (double) (x_1 - x_0);
-
-        if (dx >= 0) {
-            if (m > 1) {
-                d = y_0 - y_1 + 0.5 * (x_1 - x_0);
-                int x = x_0;
-                for (int y = y_0; y <= y_1; y++) {
-                    draw(x, y, a, b);
-                    if (d < 0)//line'ın altındaysa
-                    {
-                        d += x_1 - x_0;
-                    } else {
-                        x++;
-                        d += y_0 - y_1 + (x_1 - x_0);
-                    }
-                }
-            } else if (m <= 1 && m >= 0) {
-                int y = y_0;
-                d = y_0 - y_1 + 0.5 * (x_1 - x_0);
-                for (int x = x_0; x <= x_1; x++) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        y++;
-                        d += y_0 - y_1 + (x_1 - x_0);
-                    } else {
-                        d += y_0 - y_1;
-                    }
-                }
-            } else if (m < 0 && m >= -1.0) {
-                int y = y_0;
-                d = y_0 - y_1 + 0.5 * (x_0 - x_1);
-                for (int x = x_0; x <= x_1; x++) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        d += y_0 - y_1;
-                    } else {
-                        y--;
-                        d += y_0 - y_1 + (x_0 - x_1);
-                    }
-                }
-            } else if (m < -1.0) {
-                int x = x_0;
-                d = 0.5 * (y_0 - y_1) + (x_0 - x_1);
-                for (int y = y_0; y >= y_1; y--) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        x++;
-                        d += (y_0 - y_1) + x_0 - x_1;
-                    } else {
-                        d += x_0 - x_1;
-                    }
-                }
+        int x_from = a.x;
+        int x_to = b.x;
+        int y_from = a.y;
+        int y_to = b.y;
+        m = (double) (y_to - y_from) / (double) (x_to - x_from);
+        if (m < -1) {
+            if (x_from > x_to) {
+                drawLine(b, a, FIRST);
+            } else {
+                drawLine(a, b, FIRST);
             }
-        } else {
-            if (m > 1) {//Check
-                d = 0.5 * (y_1 - y_0) + (x_1 - x_0);
-                int x = x_0;
-                for (int y = y_0; y <= y_1; y++) {
-                    draw(x, y, a, b);
-                    if (d < 0)//line'ın altındaysa
-                    {
-                        d += x_1 - x_0;
-                    } else {
-                        x++;
-                        d += y_1 - y_0 + (x_1 - x_0);
-                    }
-                }
-            } else if (m <= 1 && m >= 0) {
-                int y = y_0;
-                d = y_1 - y_0 + 0.5 * (x_1 - x_0);
-                double M = -1.0 * (a.y - b.y) - 0.5 * (b.x - a.x);
-
-                for (int x = x_0; x >= x_1; x--) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        y++;
-                        d += y_1 - y_0 + (x_1 - x_0);
-                    } else {
-                        d += y_1 - y_0;
-                    }
-                }
-            } else if (m < 0 && m >= -1.0) {
-                int y = y_0;
-                d = y_1 - y_0 + 0.5 * (x_0 - x_1);
-                for (int x = x_0; x >= x_1; x--) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        d += y_1 - y_0;
-                    } else {
-                        y--;
-                        d += y_1 - y_0 + (x_0 - x_1);
-                    }
-                }
-            } else if (m < -1) {
-                int x = x_0;
-                d = 0.5 * (y_1 - y_0) + (x_0 - x_1);
-                for (int y = y_0; y >= y_1; y--) {
-                    draw(x, y, a, b);
-                    if (d < 0) {
-                        d += y_1 - y_0 + x_0 - x_1;
-                        x++;
-                    } else {
-
-                        d += x_0 - x_1;
-                    }
-                }
+        } else if (m < 0) {
+            if (x_from > x_to) {
+                drawLine(b, a, SECOND);
+            } else {
+                drawLine(a, b, SECOND);
+            }
+        } else if (m < 1) {
+            if (x_from > x_to) {
+                drawLine(b, a, THIRD);
+            } else {
+                drawLine(a, b, THIRD);
+            }
+        }
+        else{
+            if (x_from > x_to) {
+                drawLine(b, a, FOURTH);
+            } else {
+                drawLine(a, b, FOURTH);
             }
         }
 
     }
 }
 
-void Scene::draw(int x, int y, Vec3 a, Vec3 b) {
-    double alphaX = (x - a.x) / (b.x - a.x);
-    double alphaY = (y - a.y) / (b.y - a.y);
-
-    Color *color_a = colorsOfVertices[a.colorId - 1];
-    Color *color_b = colorsOfVertices[b.colorId - 1];
-    double cX_r = (1 - alphaX) * (color_a->r) + alphaX * color_b->r;
-    double cX_g = (1 - alphaX) * (color_a->g) + alphaX * color_b->g;
-    double cX_b = (1 - alphaX) * (color_a->b) + alphaX * color_b->b;
-
-    if (cX_r > 255)
-        cX_r = 255;
-    else if (cX_r < 0)
-        cX_r = 0;
-    if (cX_g > 255)
-        cX_g = 255;
-    else if (cX_g < 0)
-        cX_g = 0;
-    if (cX_b > 255)
-        cX_b = 255;
-    else if (cX_b < 0)
-        cX_b = 0;
-
-    Color c = Color(cX_r, cX_g, cX_b);
-
-    image[x][y].r = c.r;
-    image[x][y].g = c.g;
-    image[x][y].b = c.b;
-}
 
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
     Matrix4 modeledMatrix = getIdentityMatrix();
