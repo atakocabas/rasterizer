@@ -194,7 +194,7 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         a = aclipped;
         b = bclipped;
 
-        /*if ((int) a.x > cam->verRes - 1) a.x = cam->verRes - 1;
+        if ((int) a.x > cam->verRes - 1) a.x = cam->verRes - 1;
         if ((int) a.y > cam->horRes - 1) a.x = cam->horRes - 1;
         if ((int) a.x < 0) a.x = 0;
         if ((int) a.y < 0) a.y = 0;
@@ -203,7 +203,6 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         if ((int) b.y > cam->horRes - 1) b.x = cam->horRes - 1;
         if ((int) b.x < 0) b.x = 0;
         if ((int) b.y < 0) b.y = 0;
-         */
 
 
         double x0 = a.x;
@@ -220,159 +219,113 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         int y_1 = b.y;
         m = (double) (y_1 - y_0) / (double) (x_1 - x_0);
 
-        if (dy <= 0 && dx <= 0) {
-            //küçükeşittir mi küçüktür mü?
-            if (m > 0 && m <= 1.0) {
-                x = x_0;
-                y = y_0;
-
-                d = 2 * abs(y_1 - y_0) - abs(x_1 - x_0);
-
-                for (; x < max(x_0, x_1); x++) {
+        if (dx >= 0) {
+            if (m > 1) {
+                d = y_0 - y_1 + 0.5 * (x_1 - x_0);
+                int x = x_0;
+                for (int y = y_0; y <= y_1; y++) {
                     draw(x, y, a, b);
-                    if (d <= 0) {          //choose E
-                        d += 2 * abs(y_1 - y_0);
-                    } else {                //choose NE
-                        d += 2 * (abs(y_1 - y_0) - abs(x_1 - x_0));
+                    if (d < 0)//line'ın altındaysa
+                    {
+                        d += x_1 - x_0;
+                    } else {
+                        x++;
+                        d += y_0 - y_1 + (x_1 - x_0);
+                    }
+                }
+            } else if (m <= 1 && m >= 0) {
+                int y = y_0;
+                d = y_0 - y_1 + 0.5 * (x_1 - x_0);
+                for (int x = x_0; x <= x_1; x++) {
+                    draw(x, y, a, b);
+                    if (d < 0) {
                         y++;
+                        d += y_0 - y_1 + (x_1 - x_0);
+                    } else {
+                        d += y_0 - y_1;
+                    }
+                }
+            } else if (m < 0 && m >= -1.0) {
+                int y = y_0;
+                d = y_0 - y_1 + 0.5 * (x_0 - x_1);
+                for (int x = x_0; x <= x_1; x++) {
+                    draw(x, y, a, b);
+                    if (d < 0) {
+                        d += y_0 - y_1;
+                    } else {
+                        y--;
+                        d += y_0 - y_1 + (x_0 - x_1);
+                    }
+                }
+            } else if (m < -1.0) {
+                int x = x_0;
+                d = 0.5 * (y_0 - y_1) + (x_0 - x_1);
+                for (int y = y_0; y >= y_1; y--) {
+                    draw(x, y, a, b);
+                    if (d < 0) {
+                        x++;
+                        d += (y_0 - y_1) + x_0 - x_1;
+                    } else {
+                        d += x_0 - x_1;
                     }
                 }
             }
-        } else if (dx < 0 && dy > 0) {
-            if (m < -1) {
-                x = x_0;
-                y = y_0;
-                d = 2 * abs(x_1 - x_0) - abs(y_1 - y_0);
-                for (; y < max(y_0, y_1); y++) {
+        } else {
+            if (m > 1) {//Check
+                d = 0.5 * (y_1 - y_0) + (x_1 - x_0);
+                int x = x_0;
+                for (int y = y_0; y <= y_1; y++) {
                     draw(x, y, a, b);
-                    if (d <= 0) {             //choose N
-                        d += 2 * abs(x_1 - x_0);
-                    } else {                   // choose NW
-                        d += 2 * (abs(x_1 - x_0) - abs(y_1 - y_0));
-                        x--;
+                    if (d < 0)//line'ın altındaysa
+                    {
+                        d += x_1 - x_0;
+                    } else {
+                        x++;
+                        d += y_1 - y_0 + (x_1 - x_0);
                     }
                 }
-            } else if (m <= 0 && m >= -1) {
-                x = x_1;
-                y = y_1;
+            } else if (m <= 1 && m >= 0) {
+                int y = y_0;
+                d = y_1 - y_0 + 0.5 * (x_1 - x_0);
+                double M = -1.0 * (a.y - b.y) - 0.5 * (b.x - a.x);
 
-                d = 2 * abs(y_1 - y_0) - abs(x_1 - x_0);
-                for (; x < max(x_0, x_1); x++) {
+                for (int x = x_0; x >= x_1; x--) {
                     draw(x, y, a, b);
-                    if (d <= 0) {             //choose W
-                        d += 2 * abs(y_1 - y_0);
-                    } else {                   //choose NW
-                        d += 2 * (abs(y_1 - y_0) - abs(x_1 - x_0));
+                    if (d < 0) {
+                        y++;
+                        d += y_1 - y_0 + (x_1 - x_0);
+                    } else {
+                        d += y_1 - y_0;
+                    }
+                }
+            } else if (m < 0 && m >= -1.0) {
+                int y = y_0;
+                d = y_1 - y_0 + 0.5 * (x_0 - x_1);
+                for (int x = x_0; x >= x_1; x--) {
+                    draw(x, y, a, b);
+                    if (d < 0) {
+                        d += y_1 - y_0;
+                    } else {
                         y--;
-                    }
-                }
-            }
-        } else if (dx > 0 && dy < 0) {
-            if (m <= 0 && m >= -1.0) {
-                x = x_1;
-                y = y_1;
-
-                d = 2 * abs(y_1 - y_0) - abs(x_1 - x_0);
-                for (; x < max(x_0, x_1); x++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {             //choose W
-                        d += 2 * abs(y_1 - y_0);
-                    } else {                   //choose NW
-                        d += 2 * (abs(y_1 - y_0) - abs(x_1 - x_0));
-                        y--;
-                    }
-                }
-            } else if (-1.0 > m) {
-                x = x_1;
-                y = y_1;
-                d = 2 * abs(x_1 - x_0) - abs(y_1 - y_0);
-                for (; y < max(y_0, y_1); y++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {             //choose N
-                        d += 2 * abs(x_1 - x_0);
-                    } else {                   // choose NW
-                        d += 2 * (abs(x_1 - x_0) - abs(y_1 - y_0));
-                        x--;
-                    }
-                }
-
-            }
-        } else if (dy > 0 && dx < 0) {
-            if (m <= 0 && m >= -1.0) {
-                x = x_1;
-                y = y_1;
-
-                d = 2 * abs(y_1 - y_0) - abs(x_1 - x_0);
-                for (; x < max(x_0, x_1); x++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {             //choose W
-                        d += 2 * abs(y_1 - y_0);
-                    } else {                   //choose NW
-                        d += 2 * (abs(y_1 - y_0) - abs(x_1 - x_0));
-                        y--;
+                        d += y_1 - y_0 + (x_0 - x_1);
                     }
                 }
             } else if (m < -1) {
-                x = x_1;
-                y = y_1;
-                d = 2 * abs(x_1 - x_0) - abs(y_1 - y_0);
-                for (; y < max(y_0, y_1); y++) {
+                int x = x_0;
+                d = 0.5 * (y_1 - y_0) + (x_0 - x_1);
+                for (int y = y_0; y >= y_1; y--) {
                     draw(x, y, a, b);
-                    if (d <= 0) {             //choose N
-                        d += 2 * abs(x_1 - x_0);
-                    } else {                   // choose NW
-                        d += 2 * (abs(x_1 - x_0) - abs(y_1 - y_0));
-                        x--;
-                    }
-                }
-            } else if (-1.0 > m) {
-                x = x_1;
-                y = y_1;
-                d = 2 * abs(x_1 - x_0) - abs(y_1 - y_0);
-                for (; y < max(y_0, y_1); y++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {             //choose N
-                        d += 2 * abs(x_1 - x_0);
-                    } else {                   // choose NW
-                        d += 2 * (abs(x_1 - x_0) - abs(y_1 - y_0));
-                        x--;
-                    }
-                }
-
-            }
-        } else if (dy > 0 && dx > 0) {
-            if (0.0 < m && m < 1.0) {
-                x = x_0;
-                y = y_0;
-
-                d = 2 * abs(y_1 - y_0) - abs(x_1 - x_0);
-
-                for (; x < max(x_0, x_1); x++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {          //choose E
-                        d += 2 * abs(y_1 - y_0);
-                    } else {                //choose NE
-                        d += 2 * (abs(y_1 - y_0) - abs(x_1 - x_0));
-                        y++;
-                    }
-                }
-            } else if (m >= 1.0) {
-                x = x_0;
-                y = y_0;
-                d = 2 * abs(x_1 - x_0) - abs(y_1 - y_0);
-
-                for (; y < max(y_0, y_1); y++) {
-                    draw(x, y, a, b);
-                    if (d <= 0) {             //choose N
-                        d += 2 * abs(x_1 - x_0);
-
-                    } else {                   //choose NE
-                        d += 2 * (abs(x_1 - x_0) - abs(y_1 - y_0));
+                    if (d < 0) {
+                        d += y_1 - y_0 + x_0 - x_1;
                         x++;
+                    } else {
+
+                        d += x_0 - x_1;
                     }
                 }
             }
         }
+
     }
 }
 
