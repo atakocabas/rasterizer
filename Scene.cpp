@@ -31,8 +31,6 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
     vector<vector<Vec3>> allNewVertex;
     vector<vector<Vec3>> allNewVertexWithVp;
-    vector<Vec3> meshVertex;
-    vector<Vec3> meshVertexWithVp;
     Matrix4 orthPerspectiveProjectionMatrix;
     Matrix4 camViewMatrix = computeViewingTransformationMatrix(camera);
     if (camera->projectionType == 0) { // ORTHOGRAPHIC
@@ -45,6 +43,8 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
         Matrix4 modelingViewMatrix = ModelingTransformation(mesh);
         modelingViewMatrix = multiplyMatrixWithMatrix(orthPerspectiveProjectionMatrix,
                                                       multiplyMatrixWithMatrix(camViewMatrix, modelingViewMatrix));
+        vector<Vec3> meshVertex;
+        vector<Vec3> meshVertexWithVp;
 
         for (auto &triangle: mesh->triangles) {
             for (auto &vertex_id: triangle.vertexIds) {
@@ -74,7 +74,6 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
 
                 int k, l;
                 double total;
-
                 Vec3 mshVertexWithVp = {
                         // vertex ile viewport matrixi çarpacağız.
                         (vertex.x * viewportTransformationMatrix.val[0][0]) +
@@ -97,10 +96,11 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                 meshVertex.push_back(mshVertex);
                 meshVertexWithVp.push_back(mshVertexWithVp);
             }
+
+
         }
         allNewVertex.push_back(meshVertex);
         allNewVertexWithVp.push_back(meshVertexWithVp);
-
         // ROUNDING to set its pixel in vp
     }
     bool checkCulling = this->cullingEnabled;
@@ -190,6 +190,14 @@ void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp)
     int x_max = largest(x_0, x_1, x_2);
     int y_max = largest(y_0, y_1, y_2);
 
+    if (y_max < 0)
+        y_max = 0;
+    if (x_max < 0)
+        x_max = 0;
+    if (y_min < 0)
+        y_min = 0;
+    if (x_min < 0)
+        x_min = 0;
     for (int y = y_min; y <= y_max; y++) {
         for (int x = x_min; x <= x_max; x++) {
             double alpha = (double) f_12(x, y, x_1, y_1, x_2, y_2) / (double) f_12(x_0, y_0, x_1, y_1, x_2, y_2);
@@ -225,9 +233,6 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
                 test += (x_from - x_to);
             }
 
-            /*color_current.r += color_diff.r;
-            color_current.g += color_diff.g;
-            color_current.b += color_diff.b;*/
         }
     } else if (SECOND == region) {
         int y_current = y_from;
@@ -258,13 +263,12 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
                 test += (y_from - y_to);
             }
         }
-    }
-    else if(FOURTH == region){
+    } else if (FOURTH == region) {
         int x_current = x_from;
         double test = (x_from - x_to) + 0.5 * (y_to - y_from);
 
         for (int y_current = y_from; y_current < y_to; ++y_current) {
-            draw(x_current, y_current, from,to);
+            draw(x_current, y_current, from, to);
 
             if (test < 0) {
                 x_current += 1;
@@ -318,6 +322,7 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         m = (double) (y_to - y_from) / (double) (x_to - x_from);
         if (m < -1) {
             if (x_from > x_to) {
+                //TODO: tek method çağır bence a ve byi reverse edersin içeride
                 drawLine(b, a, FIRST);
             } else {
                 drawLine(a, b, FIRST);
@@ -334,8 +339,7 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
             } else {
                 drawLine(a, b, THIRD);
             }
-        }
-        else{
+        } else {
             if (x_from > x_to) {
                 drawLine(b, a, FOURTH);
             } else {

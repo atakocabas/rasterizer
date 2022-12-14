@@ -54,10 +54,10 @@ Matrix4 calculateViewportMatrix(Camera *camera)
 {
     Matrix4 res = getIdentityMatrix();
 
-    res.val[0][0] = camera->verRes / 2.0;
-    res.val[0][3] = ((camera->verRes - 1) / 2.0);
-    res.val[1][1] = camera->horRes / 2.0;
-    res.val[1][3] = ((camera->horRes - 1) / 2.0);
+    res.val[0][0] = camera->horRes / 2.0;
+    res.val[0][3] = ((camera->horRes - 1) / 2.0);
+    res.val[1][1] = camera->verRes / 2.0;
+    res.val[1][3] = ((camera->verRes - 1) / 2.0);
     res.val[2][2] = 0.5;
     res.val[2][3] = 0.5;
 
