@@ -140,15 +140,13 @@ int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
 
-void Scene::draw(int x, int y, Vec3 a, Vec3 b) {
+void Scene::draw(int x, int y, Vec3 a, Vec3 b, Color color_a, Color color_b) {
     double alphaX = (x - a.x) / (b.x - a.x);
     double alphaY = (y - a.y) / (b.y - a.y);
 
-    Color *color_a = colorsOfVertices[a.colorId - 1];
-    Color *color_b = colorsOfVertices[b.colorId - 1];
-    double cX_r = (1 - alphaX) * (color_a->r) + alphaX * color_b->r;
-    double cX_g = (1 - alphaX) * (color_a->g) + alphaX * color_b->g;
-    double cX_b = (1 - alphaX) * (color_a->b) + alphaX * color_b->b;
+    double cX_r = (1 - alphaX) * (color_a.r) + alphaX * color_b.r;
+    double cX_g = (1 - alphaX) * (color_a.g) + alphaX * color_b.g;
+    double cX_b = (1 - alphaX) * (color_a.b) + alphaX * color_b.b;
 
     if (cX_r > 255)
         cX_r = 255;
@@ -213,7 +211,7 @@ void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp)
     }
 }
 
-void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
+void Scene::drawLine(Vec3 from, Vec3 to, REGION region, Color color_a, Color color_b) {
     int x_from = from.x;
     int x_to = to.x;
     int y_from = from.y;
@@ -224,7 +222,7 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
         double test = (x_from - x_to) + 0.5 * (y_from - y_to);
 
         for (int y_current = y_from; y_current > y_to; --y_current) {
-            draw(x_current, y_current, from, to);
+            draw(x_current, y_current, from, to, color_a, color_b);
 
             if (test < 0) {
                 x_current += 1;
@@ -239,7 +237,7 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
         double test = (y_to - y_from) + 0.5 * (x_to - x_from);
 
         for (int x_current = x_from; x_current < x_to; ++x_current) {
-            draw(x_current, y_current, from, to);
+            draw(x_current, y_current, from, to, color_a, color_b);
 
             if (test < 0) {
                 y_current -= 1;
@@ -255,7 +253,7 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
         double test = (y_from - y_to) + 0.5 * (x_to - x_from);
 
         for (int x_current = x_from; x_current < x_to; ++x_current) {
-            draw(x_current, y_current, from, to);
+            draw(x_current, y_current, from, to, color_a, color_b);
             if (test < 0) {
                 y_current += 1;
                 test += (y_from - y_to) + (x_to - x_from);
@@ -268,7 +266,7 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region) {
         double test = (x_from - x_to) + 0.5 * (y_to - y_from);
 
         for (int y_current = y_from; y_current < y_to; ++y_current) {
-            draw(x_current, y_current, from, to);
+            draw(x_current, y_current, from,to, color_a, color_b);
 
             if (test < 0) {
                 x_current += 1;
@@ -299,7 +297,8 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         int x, y, d;
 
         Vec3 aclipped, bclipped;
-        bool isVisible = LiangBarskyAlgorithm(a, b, cam, aclipped, bclipped);
+        Color color_a(*(this->colorsOfVertices[a.colorId - 1])), color_b(*(this->colorsOfVertices[b.colorId - 1]));
+        bool isVisible = LiangBarskyAlgorithm(a, b, cam, aclipped, bclipped, color_a, color_b, *this);
         if (!isVisible) continue;
         a = aclipped;
         b = bclipped;
@@ -322,28 +321,27 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         m = (double) (y_to - y_from) / (double) (x_to - x_from);
         if (m < -1) {
             if (x_from > x_to) {
-                //TODO: tek method çağır bence a ve byi reverse edersin içeride
-                drawLine(b, a, FIRST);
+                drawLine(b, a, FIRST, color_b, color_a);
             } else {
-                drawLine(a, b, FIRST);
+                drawLine(a, b, FIRST, color_a, color_b);
             }
         } else if (m < 0) {
             if (x_from > x_to) {
-                drawLine(b, a, SECOND);
+                drawLine(b, a, SECOND, color_b, color_a);
             } else {
-                drawLine(a, b, SECOND);
+                drawLine(a, b, SECOND, color_a, color_b);
             }
         } else if (m < 1) {
             if (x_from > x_to) {
-                drawLine(b, a, THIRD);
+                drawLine(b, a, THIRD, color_b, color_a);
             } else {
-                drawLine(a, b, THIRD);
+                drawLine(a, b, THIRD, color_a, color_b);
             }
         } else {
             if (x_from > x_to) {
-                drawLine(b, a, FOURTH);
+                drawLine(b, a, FOURTH, color_b, color_a);
             } else {
-                drawLine(a, b, FOURTH);
+                drawLine(a, b, FOURTH, color_a, color_b);
             }
         }
 
@@ -674,7 +672,12 @@ void Scene::convertPPMToPNG(string ppmFileName, int osType) {
         system(command.c_str());
     }
 
+    else if (osType == 3) {
+        command = "pnmtopng " + ppmFileName + " > " + ppmFileName + ".png";
+        system(command.c_str());
+    }
         // default action - don't do conversion
     else {
+        
     }
 }

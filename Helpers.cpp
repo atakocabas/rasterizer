@@ -66,11 +66,13 @@ Matrix4 calculateViewportMatrix(Camera *camera)
     return res;
 }
 
-bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new)
+bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new, Color &color_a, Color &color_b, Scene scene)
 {
+    Color v0color = *(scene.colorsOfVertices.at(v0.colorId - 1)), v1color = *(scene.colorsOfVertices.at(v1.colorId - 1));
     double te = 0.0, tl = 1.0;
     double dx = v1.x - v0.x, dy = v1.y - v0.y;
     bool visible = false;
+    double alpha;
     v0new.x = v0.x;
     v0new.y = v0.y;
     v0new.colorId = v0.colorId;
@@ -78,6 +80,7 @@ bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1ne
     v1new.x = v1.x;
     v1new.y = v1.y;
     v1new.colorId = v1.colorId;
+
 
     if (isVisible(dx, 0 - v0.x, te, tl))
         if (isVisible(-dx, v0.x - cam->verRes, te, tl))
@@ -89,11 +92,19 @@ bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1ne
                     {
                         v1new.x = v0.x + dx * tl;
                         v1new.y = v0.y + dy * tl;
+                        alpha = (v1new.x - v0.x) / (v1.x - v0.x);
+                        color_b.r = (1-alpha) * v0color.r + alpha * v1color.r;
+                        color_b.g = (1-alpha) * v0color.g + alpha * v1color.g;
+                        color_b.b = (1-alpha) * v0color.b + alpha * v1color.b;
                     }
                     if (te > 0)
                     {
                         v0new.x = v0.x + dx * te;
                         v0new.y = v0.y + dy * te;
+                        alpha = (v0new.x - v0.x) / (v1.x - v0.x);
+                        color_a.r = (1-alpha) * v0color.r + alpha * v1color.r;
+                        color_a.g = (1-alpha) * v0color.g + alpha * v1color.g;
+                        color_a.b = (1-alpha) * v0color.b + alpha * v1color.b;
                     }
                 }
     return visible;

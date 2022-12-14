@@ -53,8 +53,8 @@ public:
 	Matrix4 ViewingTransformation(Mesh *mesh);
     void rasterization(int, int, vector<vector<Vec3>>);
 	void midPoint(int i, int j, int id, Camera* cam, vector< vector<Vec3> > vpvertices);
-	void draw(int x, int y, Vec3 a, Vec3 b);
-	void drawLine( Vec3 a, Vec3 b,REGION region);
+	void draw(int x, int y, Vec3 a, Vec3 b, Color color_a, Color color_b);
+	void drawLine( Vec3 a, Vec3 b,REGION region, Color color_a, Color color_b);
 };
 
 #endif
