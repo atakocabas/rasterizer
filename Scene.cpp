@@ -103,14 +103,12 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
         allNewVertexWithVp.push_back(meshVertexWithVp);
         // ROUNDING to set its pixel in vp
     }
-    bool checkCulling = this->cullingEnabled;
     for (int i = 0; i < meshes.size(); ++i) {
         int mesh_type = meshes[i]->type;
         for (int j = 0; j < meshes[i]->numberOfTriangles * 3; j += 3) {
-            if (checkCulling && culling(i, j, camera, allNewVertex))
+            if (this->cullingEnabled && culling(i, j, camera, allNewVertex) == 0)
                 continue;
 
-            // MID POINT            // RASTERIZATION
             if (mesh_type == 1) {
                 rasterization(i, j, allNewVertexWithVp);
             } else {
@@ -266,7 +264,7 @@ void Scene::drawLine(Vec3 from, Vec3 to, REGION region, Color color_a, Color col
         double test = (x_from - x_to) + 0.5 * (y_to - y_from);
 
         for (int y_current = y_from; y_current < y_to; ++y_current) {
-            draw(x_current, y_current, from,to, color_a, color_b);
+            draw(x_current, y_current, from, to, color_a, color_b);
 
             if (test < 0) {
                 x_current += 1;
@@ -670,14 +668,12 @@ void Scene::convertPPMToPNG(string ppmFileName, int osType) {
     else if (osType == 2) {
         command = "magick convert " + ppmFileName + " " + ppmFileName + ".png";
         system(command.c_str());
-    }
-
-    else if (osType == 3) {
+    } else if (osType == 3) {
         command = "pnmtopng " + ppmFileName + " > " + ppmFileName + ".png";
         system(command.c_str());
     }
         // default action - don't do conversion
     else {
-        
+
     }
 }
