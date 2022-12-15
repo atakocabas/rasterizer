@@ -139,27 +139,20 @@ int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
 }
 
 void Scene::draw(int x, int y, Vec3 a, Vec3 b, Color color_a, Color color_b) {
-    double alphaX = (x - a.x) / (b.x - a.x);
-    double alphaY = (y - a.y) / (b.y - a.y);
+    double dx = abs(b.x - a.x), dy = abs(b.y - a.y);
+    double alpha;
+    if(dx > dy) alpha = (x - a.x) / (b.x - a.x);
+    else alpha = (y - a.y) / (b.y - a.y);
 
-    double cX_r = (1 - alphaX) * (color_a.r) + alphaX * color_b.r;
-    double cX_g = (1 - alphaX) * (color_a.g) + alphaX * color_b.g;
-    double cX_b = (1 - alphaX) * (color_a.b) + alphaX * color_b.b;
+    double red = (1 - alpha) * (color_a.r) + alpha * color_b.r;
+    double green = (1 - alpha) * (color_a.g) + alpha * color_b.g;
+    double blue = (1 - alpha) * (color_a.b) + alpha * color_b.b;
 
-    if (cX_r > 255)
-        cX_r = 255;
-    else if (cX_r < 0)
-        cX_r = 0;
-    if (cX_g > 255)
-        cX_g = 255;
-    else if (cX_g < 0)
-        cX_g = 0;
-    if (cX_b > 255)
-        cX_b = 255;
-    else if (cX_b < 0)
-        cX_b = 0;
+    red = makeBetweenZeroAnd255(red);
+    green = makeBetweenZeroAnd255(green);
+    blue = makeBetweenZeroAnd255(blue);
 
-    Color c = Color(cX_r, cX_g, cX_b);
+    Color c = Color(red, green, blue);
 
     image[x][y].r = c.r;
     image[x][y].g = c.g;
