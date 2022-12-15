@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
         scene = new Scene(xmlPath);
 
-        for (int i = 4; i < scene->cameras.size(); i += 5) {
+        for (int i = 0; i < scene->cameras.size(); i++) {
             // initialize image with basic values
             scene->initializeImage(scene->cameras[i]);
 
