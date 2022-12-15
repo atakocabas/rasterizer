@@ -114,7 +114,6 @@ int smallest(int x, int y, int z) {
 int largest(int x, int y, int z) {
     int maxYX = max(max(x, y), z);
     return maxYX < 0 ? 0 : maxYX;
-
 }
 
 double f01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
