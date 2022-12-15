@@ -10,19 +10,6 @@
 #include <vector>
 
 using namespace std;
-#define PI 3.14159265
-
-
-void swapVec3(Vec3 &a, Vec3 &b) {
-    Vec3 tmp(a);
-    a.x = b.x;
-    a.y = b.y;
-    a.z = b.z;
-
-    b.x = tmp.x;
-    b.y = tmp.y;
-    b.z = tmp.z;
-}
 
 ORDER backfaceCulling(int i, int j, Camera *cam, vector<vector<Vec3>> cameraview) {
 
@@ -54,8 +41,9 @@ Matrix4 calculateViewportMatrix(Camera *camera) {
     return res;
 }
 
-bool LiangBarskyAlgorithm(const Vec3& v0, const Vec3& v1, Camera *cam, Vec3 &v0new, Vec3 &v1new, Color &color_a, Color &color_b,
-                          const Scene& scene) {
+bool LiangBarskyAlgorithm(const Vec3 &v0, const Vec3 &v1, Camera *cam, Vec3 &v0new, Vec3 &v1new, Color &color_a,
+                          Color &color_b,
+                          const Scene &scene) {
     Color v0color = *(scene.colorsOfVertices.at(v0.colorId - 1)), v1color = *(scene.colorsOfVertices.at(
             v1.colorId - 1));
     double te = 0.0, tl = 1.0;
@@ -179,8 +167,10 @@ Matrix4 computeTranslationMatrix(Translation *t) {
 Matrix4 computeRotationMatrix(Rotation *rotation) {
     Rotation *r = rotation;
     double angle = r->angle;
+    double theta = angle * M_PI / 180;
+
     Vec3 u(r->ux, r->uy, r->uz, 0);
-    Matrix4 fin;
+    Matrix4 res;
 
     double temp_min = abs(u.x);
     Vec3 v = Vec3(0, -u.z, u.y, -1);
@@ -196,28 +186,30 @@ Matrix4 computeRotationMatrix(Rotation *rotation) {
         v.z = 0;
     }
     v = normalizeVec3(v);
+    u = normalizeVec3(u);
     Vec3 w = crossProductVec3(u, v);
+
+
     double M[4][4] = {{u.x, u.y, u.z, 0},
                       {v.x, v.y, v.z, 0},
                       {w.x, w.y, w.z, 0},
                       {0,   0,   0,   1}};
 
-    double inverse_M[4][4] = {{u.x, v.x, w.x, 0},
+    double M_INVERSE[4][4] = {{u.x, v.x, w.x, 0},
                               {u.y, v.y, w.y, 0},
                               {u.z, v.z, w.z, 0},
                               {0,   0,   0,   1}};
 
-    double theta = rotation->angle * (PI / 180.0);
-    double R_x[4][4] = {{1, 0,          0,           0},
-                        {0, cos(theta), -sin(theta), 0},
-                        {0, sin(theta), cos(theta),  0},
-                        {0, 0,          0,           1}};
+    double Rotation[4][4] = {{1, 0,          0,           0},
+                             {0, cos(theta), -sin(theta), 0},
+                             {0, sin(theta), cos(theta),  0},
+                             {0, 0,          0,           1}};
 
-    Matrix4 r_x_m;
-    r_x_m = multiplyMatrixWithMatrix(Matrix4(R_x), Matrix4(M));
-    fin = multiplyMatrixWithMatrix(Matrix4(inverse_M), r_x_m);
+    Matrix4 tmp;
+    tmp = multiplyMatrixWithMatrix(M_INVERSE, Rotation);
+    res = multiplyMatrixWithMatrix(tmp, M);
 
-    return fin;
+    return res;
 }
 
 Matrix4 computeScalingMatrix(Scaling *s) {
@@ -232,7 +224,7 @@ Matrix4 computeScalingMatrix(Scaling *s) {
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
  */
-Vec3 crossProductVec3(const Vec3& a, const Vec3& b) {
+Vec3 crossProductVec3(const Vec3 &a, const Vec3 &b) {
     Vec3 result;
 
     result.x = a.y * b.z - b.y * a.z;
@@ -245,21 +237,21 @@ Vec3 crossProductVec3(const Vec3& a, const Vec3& b) {
 /*
  * Calculate dot product of vec3 a, vec3 b and return resulting value.
  */
-double dotProductVec3(const Vec3& a, const Vec3& b) {
+double dotProductVec3(const Vec3 &a, const Vec3 &b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /*
  * Find length (|v|) of vec3 v.
  */
-double magnitudeOfVec3(const Vec3& v) {
+double magnitudeOfVec3(const Vec3 &v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /*
  * Normalize the vec3 to make it unit vec3.
  */
-Vec3 normalizeVec3(const Vec3& v) {
+Vec3 normalizeVec3(const Vec3 &v) {
     Vec3 result;
     double d;
 
@@ -274,7 +266,7 @@ Vec3 normalizeVec3(const Vec3& v) {
 /*
  * Return -v (inverse of vec3 v)
  */
-Vec3 inverseVec3(const Vec3& v) {
+Vec3 inverseVec3(const Vec3 &v) {
     Vec3 result;
     result.x = -v.x;
     result.y = -v.y;
@@ -286,7 +278,7 @@ Vec3 inverseVec3(const Vec3& v) {
 /*
  * Add vec3 a to vec3 b and return resulting vec3 (a+b).
  */
-Vec3 addVec3(const Vec3& a, const Vec3& b) {
+Vec3 addVec3(const Vec3 &a, const Vec3 &b) {
     Vec3 result;
     result.x = a.x + b.x;
     result.y = a.y + b.y;
@@ -298,7 +290,7 @@ Vec3 addVec3(const Vec3& a, const Vec3& b) {
 /*
  * Subtract vec3 b from vec3 a and return resulting vec3 (a-b).
  */
-Vec3 subtractVec3(const Vec3& a, const Vec3& b) {
+Vec3 subtractVec3(const Vec3 &a, const Vec3 &b) {
     Vec3 result;
     result.x = a.x - b.x;
     result.y = a.y - b.y;
@@ -310,7 +302,7 @@ Vec3 subtractVec3(const Vec3& a, const Vec3& b) {
 /*
  * Multiply each element of vec3 with scalar.
  */
-Vec3 multiplyVec3WithScalar(const Vec3& v, double c) {
+Vec3 multiplyVec3WithScalar(const Vec3 &v, double c) {
     Vec3 result;
     result.x = v.x * c;
     result.y = v.y * c;
@@ -363,7 +355,7 @@ Matrix4 getIdentityMatrix() {
 /*
  * Multiply matrices m1 (Matrix4) and m2 (Matrix4) and return the result matrix r (Matrix4).
  */
-Matrix4 multiplyMatrixWithMatrix(const Matrix4& m1, const Matrix4& m2) {
+Matrix4 multiplyMatrixWithMatrix(const Matrix4 &m1, const Matrix4 &m2) {
     Matrix4 result;
     double total;
 
@@ -384,7 +376,7 @@ Matrix4 multiplyMatrixWithMatrix(const Matrix4& m1, const Matrix4& m2) {
 /*
  * Multiply matrix m (Matrix4) with vector v (vec4) and store the result in vector r (vec4).
  */
-Vec4 multiplyMatrixWithVec4(const Matrix4& m, Vec4 v) {
+Vec4 multiplyMatrixWithVec4(const Matrix4 &m, Vec4 v) {
     double values[4];
     double total;
 

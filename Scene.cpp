@@ -202,59 +202,59 @@ void Scene::drawLine(const Vec3 &smallerVertex, const Vec3 &biggerVertex, REGION
 
     int x = s_x;
     int y = s_y;
-    double t;
+    double d = 0.0;
     switch (region) {
         case FIRST:
-            t = (s_x - b_x) + 0.5 * (s_y - b_y);
+            d = (s_x - b_x) + 0.5 * (s_y - b_y);
 
-            for (y = s_y; y > b_y; --y) {
+            for (y = s_y; y > b_y; y--) {
                 interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
-                if (t < 0) {
+                if (d < 0) {
                     x += 1;
-                    t += (s_x - b_x) + (s_y - b_y);
+                    d += (s_x - b_x) + (s_y - b_y);
                 } else {
-                    t += (s_x - b_x);
+                    d += (s_x - b_x);
                 }
             }
             break;
         case SECOND:
-            t = (b_y - s_y) + 0.5 * (b_x - s_x);
+            d = (b_y - s_y) + 0.5 * (b_x - s_x);
 
-            for (x = s_x; x < b_x; ++x) {
+            for (x = s_x; x < b_x; x++) {
                 interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
 
-                if (t < 0) {
+                if (d < 0) {
                     y -= 1;
-                    t += (b_y - s_y) + (b_x - s_x);
+                    d += (b_y - s_y) + (b_x - s_x);
                 } else {
-                    t += (b_y - s_y);
+                    d += (b_y - s_y);
                 }
             }
             break;
         case THIRD:
-            t = (s_y - b_y) + 0.5 * (b_x - s_x);
+            d = (s_y - b_y) + 0.5 * (b_x - s_x);
 
-            for (x = s_x; x < b_x; ++x) {
+            for (x = s_x; x < b_x; x++) {
                 interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
-                if (t < 0) {
+                if (d < 0) { //choose NE
                     y += 1;
-                    t += (s_y - b_y) + (b_x - s_x);
-                } else {
-                    t += (s_y - b_y);
+                    d += (s_y - b_y) + (b_x - s_x);
+                } else { //choose E
+                    d += (s_y - b_y);
                 }
             }
             break;
         case FOURTH:
-            t = (s_x - b_x) + 0.5 * (b_y - s_y);
+            d = (s_x - b_x) + 0.5 * (b_y - s_y);
 
-            for (y = s_y; y < b_y; ++y) {
+            for (y = s_y; y < b_y; y++) {
                 interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
 
-                if (t < 0) {
+                if (d < 0) {
                     x += 1;
-                    t += (s_x - b_x) + (b_y - s_y);
+                    d += (s_x - b_x) + (b_y - s_y);
                 } else {
-                    t += (s_x - b_x);
+                    d += (s_x - b_x);
                 }
             }
     }
@@ -268,7 +268,7 @@ void Scene::lineRasterization(int i, int j, int id, Camera *cam, vector<vector<V
     Vec3 v0 = vpvertices[i][j];
     Vec3 v1 = vpvertices[i][j + 1];
     Vec3 v2 = vpvertices[i][j + 2];
-    double m;
+    double m = INFINITY;
 
     vector<Vec3> temp = {v0, v1, v2};
 
@@ -296,8 +296,8 @@ void Scene::lineRasterization(int i, int j, int id, Camera *cam, vector<vector<V
         if ((int) b.x < 0) b.x = 0;
         if ((int) b.y < 0) b.y = 0;
 
-
-        m = calculateSlope(a, b);
+        if (b.x != a.x)
+            m = calculateSlope(a, b);
 
         if (m < -1)
             a.x > b.x ? drawLine(b, a, FIRST, color_b, color_a) : drawLine(a, b, FIRST, color_a, color_b);
