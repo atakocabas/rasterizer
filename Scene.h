@@ -55,7 +55,7 @@ public:
 
     Matrix4 ModelingTransformation(Mesh *mesh);
 
-    void triangleRasterization(int i, int j, const vector<vector<Vec3>> &allNewVertexWithVp);
+    void triangleRasterization(int i, int j, const vector<vector<Vec3>> &allNewVertexWithVp,Camera *cam );
 
     void lineRasterization(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpvertices);
 

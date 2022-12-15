@@ -98,7 +98,7 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                     continue;
 
             if (mesh_type == 1) {
-                triangleRasterization(i, j, allNewVertexWithVp);
+                triangleRasterization(i, j, allNewVertexWithVp, camera);
             } else {
                 lineRasterization(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
             }
@@ -150,12 +150,13 @@ void Scene::interpolate(int x, int y, const Vec3 &a, const Vec3 &b, const Color 
 }
 
 void Scene::writeToImage(const Color &c, int x, int y) {
+
     image[x][y].r = c.r;
     image[x][y].g = c.g;
     image[x][y].b = c.b;
 }
 
-void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allNewVertexWithVp) {
+void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allNewVertexWithVp, Camera *camera) {
 
     double alpha, beta, gamma = 0;
     int x0 = (int) allNewVertexWithVp[i][j].x;
@@ -168,8 +169,8 @@ void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allN
 
     int x_min = smallest(x0, x1, x2);
     int y_min = smallest(y0, y1, y2);
-    int x_max = largest(x0, x1, x2);
-    int y_max = largest(y0, y1, y2);
+    int x_max = min(largest(x0, x1, x2), camera->horRes - 1);
+    int y_max = min(largest(y0, y1, y2), camera->verRes - 1);
 
     Color *c0 = this->colorsOfVertices[allNewVertexWithVp[i][j].colorId - 1];
     Color *c1 = this->colorsOfVertices[allNewVertexWithVp[i][j + 1].colorId - 1];
@@ -183,7 +184,6 @@ void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allN
             gamma = f01(x, y, x0, y0, x1, y1) / f01(x2, y2, x0, y0, x1, y1);
 
             if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-
                 auto *color = new Color(alpha * c0->r + beta * c1->r + gamma * c2->r,
                                         alpha * c0->g + beta * c1->g + gamma * c2->g,
                                         alpha * c0->b + beta * c1->b + gamma * c2->b);
