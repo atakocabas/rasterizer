@@ -313,7 +313,6 @@ void Scene::lineRasterization(int i, int j, int id, Camera *cam, vector<vector<V
     }
 }
 
-
 Matrix4 Scene::ModelingTransformation(Mesh *mesh) {
     Matrix4 modeledMatrix = getIdentityMatrix();
     Matrix4 preComputedMatrix = getIdentityMatrix();
