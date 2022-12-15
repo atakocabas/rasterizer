@@ -117,15 +117,15 @@ int largest(int x, int y, int z) {
 
 }
 
-double f_01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
+double f01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
     return x * (y_0 - y_1) + y * (x_1 - x_0) + x_0 * y_1 - y_0 * x_1;
 }
 
-double f_12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
+double f12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
     return x * (y_1 - y_2) + y * (x_2 - x_1) + x_1 * y_2 - y_1 * x_2;
 }
 
-double f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
+double f20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
 
@@ -179,9 +179,9 @@ void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allN
     for (int y = y_min; y <= y_max; y++) {
         for (int x = x_min; x <= x_max; x++) {
             //TODO: Hata görürsen ilk buraya bak!!
-            alpha = f_12(x, y, x1, y1, x2, y2) / f_12(x0, y0, x1, y1, x2, y2);
-            beta = f_20(x, y, x0, y0, x2, y2) / f_20(x1, y1, x0, y0, x2, y2);
-            gamma = f_01(x, y, x0, y0, x1, y1) / f_01(x2, y2, x0, y0, x1, y1);
+            alpha = f12(x, y, x1, y1, x2, y2) / f12(x0, y0, x1, y1, x2, y2);
+            beta = f20(x, y, x0, y0, x2, y2) / f20(x1, y1, x0, y0, x2, y2);
+            gamma = f01(x, y, x0, y0, x1, y1) / f01(x2, y2, x0, y0, x1, y1);
 
             if (alpha >= 0 && beta >= 0 && gamma >= 0) {
 
