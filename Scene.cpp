@@ -132,7 +132,7 @@ void Scene::interpolate(int x, int y, const Vec3 &a, const Vec3 &b, const Color 
     double alpha = 0;
     double dx = abs(b.x - a.x), dy = abs(b.y - a.y);
 
-    dx > dy ? alpha = (x - a.x) / (b.x - a.x) : (y - a.y) / (b.y - a.y);
+    dx > dy ? alpha = (x - a.x) / (b.x - a.x) : alpha = (y - a.y) / (b.y - a.y);
 
 
     double red = (1 - alpha) * (color_a.r) + alpha * color_b.r;
