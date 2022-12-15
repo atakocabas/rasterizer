@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -19,13 +18,6 @@
 
 using namespace tinyxml2;
 using namespace std;
-
-
-/*
-    Transformations, clipping, culling, rasterization are done here.
-    You may define helper functions.
-*/
-Matrix4 ModelingTransformation(Mesh *mesh);
 
 void Scene::forwardRenderingPipeline(Camera *camera) {
 
@@ -72,8 +64,6 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                         vertex.colorId,
                 };
 
-                int k, l;
-                double total;
                 Vec3 mshVertexWithVp = {
                         // vertex ile viewport matrixi çarpacağız.
                         (vertex.x * viewportTransformationMatrix.val[0][0]) +
@@ -92,57 +82,59 @@ void Scene::forwardRenderingPipeline(Camera *camera) {
                          (vertex.t * viewportTransformationMatrix.val[2][3])),
                         vertex.colorId,
                 };
-                // ViewPort here?
                 meshVertex.push_back(mshVertex);
                 meshVertexWithVp.push_back(mshVertexWithVp);
             }
-
-
         }
         allNewVertex.push_back(meshVertex);
         allNewVertexWithVp.push_back(meshVertexWithVp);
-        // ROUNDING to set its pixel in vp
+
     }
     for (int i = 0; i < meshes.size(); ++i) {
         int mesh_type = meshes[i]->type;
         for (int j = 0; j < meshes[i]->numberOfTriangles * 3; j += 3) {
-            if (this->cullingEnabled && culling(i, j, camera, allNewVertex) == 0)
-                continue;
+            if (this->cullingEnabled)
+                if (backfaceCulling(i, j, camera, allNewVertex) == BACK)
+                    continue;
 
             if (mesh_type == 1) {
-                rasterization(i, j, allNewVertexWithVp);
+                triangleRasterization(i, j, allNewVertexWithVp);
             } else {
-                midPoint(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
+                lineRasterization(i, j, meshes[i]->meshId, camera, allNewVertexWithVp);
             }
         }
     }
 }
 
 int smallest(int x, int y, int z) {
-    return min(min(x, y), z);
+    int minXY = min(min(x, y), z);
+    return minXY < 0 ? 0 : minXY;
 }
 
 int largest(int x, int y, int z) {
-    return max(max(x, y), z);
+    int maxYX = max(max(x, y), z);
+    return maxYX < 0 ? 0 : maxYX;
+
 }
 
-int f_01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
+double f_01(int x, int y, int x_0, int y_0, int x_1, int y_1) {
     return x * (y_0 - y_1) + y * (x_1 - x_0) + x_0 * y_1 - y_0 * x_1;
 }
 
-int f_12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
+double f_12(int x, int y, int x_1, int y_1, int x_2, int y_2) {
     return x * (y_1 - y_2) + y * (x_2 - x_1) + x_1 * y_2 - y_1 * x_2;
 }
 
-int f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
+double f_20(int x, int y, int x_0, int y_0, int x_2, int y_2) {
     return x * (y_2 - y_0) + y * (x_0 - x_2) + x_2 * y_0 - y_2 * x_0;
 }
 
-void Scene::draw(int x, int y, Vec3 a, Vec3 b, Color color_a, Color color_b) {
+void Scene::interpolate(int x, int y, const Vec3 &a, const Vec3 &b, const Color &color_a, const Color &color_b) {
+    double alpha = 0;
     double dx = abs(b.x - a.x), dy = abs(b.y - a.y);
-    double alpha;
-    if(dx > dy) alpha = (x - a.x) / (b.x - a.x);
-    else alpha = (y - a.y) / (b.y - a.y);
+
+    dx > dy ? alpha = (x - a.x) / (b.x - a.x) : (y - a.y) / (b.y - a.y);
+
 
     double red = (1 - alpha) * (color_a.r) + alpha * color_b.r;
     double green = (1 - alpha) * (color_a.g) + alpha * color_b.g;
@@ -154,131 +146,130 @@ void Scene::draw(int x, int y, Vec3 a, Vec3 b, Color color_a, Color color_b) {
 
     Color c = Color(red, green, blue);
 
+    writeToImage(c, x, y);
+
+}
+
+void Scene::writeToImage(const Color &c, int x, int y) {
     image[x][y].r = c.r;
     image[x][y].g = c.g;
     image[x][y].b = c.b;
 }
 
-void Scene::rasterization(int i, int j, vector<vector<Vec3>> allNewVertexWithVp) {
+void Scene::triangleRasterization(int i, int j, const vector<vector<Vec3>> &allNewVertexWithVp) {
 
-    int x_0 = allNewVertexWithVp[i][j].x;
-    int x_1 = allNewVertexWithVp[i][j + 1].x;
-    int x_2 = allNewVertexWithVp[i][j + 2].x;
+    double alpha, beta, gamma = 0;
+    int x0 = (int) allNewVertexWithVp[i][j].x;
+    int x1 = (int) allNewVertexWithVp[i][j + 1].x;
+    int x2 = (int) allNewVertexWithVp[i][j + 2].x;
 
-    int y_0 = allNewVertexWithVp[i][j].y;
-    int y_1 = allNewVertexWithVp[i][j + 1].y;
-    int y_2 = allNewVertexWithVp[i][j + 2].y;
+    int y0 = (int) allNewVertexWithVp[i][j].y;
+    int y1 = (int) allNewVertexWithVp[i][j + 1].y;
+    int y2 = (int) allNewVertexWithVp[i][j + 2].y;
+
+    int x_min = smallest(x0, x1, x2);
+    int y_min = smallest(y0, y1, y2);
+    int x_max = largest(x0, x1, x2);
+    int y_max = largest(y0, y1, y2);
 
     Color *c0 = this->colorsOfVertices[allNewVertexWithVp[i][j].colorId - 1];
     Color *c1 = this->colorsOfVertices[allNewVertexWithVp[i][j + 1].colorId - 1];
     Color *c2 = this->colorsOfVertices[allNewVertexWithVp[i][j + 2].colorId - 1];
 
-    int x_min = smallest(x_0, x_1, x_2);
-    int y_min = smallest(y_0, y_1, y_2);
-
-    int x_max = largest(x_0, x_1, x_2);
-    int y_max = largest(y_0, y_1, y_2);
-
-    if (y_max < 0)
-        y_max = 0;
-    if (x_max < 0)
-        x_max = 0;
-    if (y_min < 0)
-        y_min = 0;
-    if (x_min < 0)
-        x_min = 0;
     for (int y = y_min; y <= y_max; y++) {
         for (int x = x_min; x <= x_max; x++) {
-            double alpha = (double) f_12(x, y, x_1, y_1, x_2, y_2) / (double) f_12(x_0, y_0, x_1, y_1, x_2, y_2);
-            double beta = (double) f_20(x, y, x_0, y_0, x_2, y_2) / (double) f_20(x_1, y_1, x_0, y_0, x_2, y_2);
-            double gama = (double) f_01(x, y, x_0, y_0, x_1, y_1) / (double) f_01(x_2, y_2, x_0, y_0, x_1, y_1);
+            //TODO: Hata görürsen ilk buraya bak!!
+            alpha = f_12(x, y, x1, y1, x2, y2) / f_12(x0, y0, x1, y1, x2, y2);
+            beta = f_20(x, y, x0, y0, x2, y2) / f_20(x1, y1, x0, y0, x2, y2);
+            gamma = f_01(x, y, x0, y0, x1, y1) / f_01(x2, y2, x0, y0, x1, y1);
 
-            if (alpha >= 0 && beta >= 0 && gama >= 0) {
-                image[x][y].r = alpha * c0->r + beta * c1->r + gama * c2->r;
-                image[x][y].g = alpha * c0->g + beta * c1->g + gama * c2->g;
-                image[x][y].b = alpha * c0->b + beta * c1->b + gama * c2->b;
+            if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+
+                auto *color = new Color(alpha * c0->r + beta * c1->r + gamma * c2->r,
+                                        alpha * c0->g + beta * c1->g + gamma * c2->g,
+                                        alpha * c0->b + beta * c1->b + gamma * c2->b);
+                writeToImage(*color, x, y);
             }
         }
     }
 }
 
-void Scene::drawLine(Vec3 from, Vec3 to, REGION region, Color color_a, Color color_b) {
-    int x_from = from.x;
-    int x_to = to.x;
-    int y_from = from.y;
-    int y_to = to.y;
+void Scene::drawLine(const Vec3 &smallerVertex, const Vec3 &biggerVertex, REGION region, const Color &color_a,
+                     const Color &color_b) {
+    int s_x = (int) smallerVertex.x;
+    int b_x = (int) biggerVertex.x;
+    int s_y = (int) smallerVertex.y;
+    int b_y = (int) biggerVertex.y;
 
-    if (FIRST == region) {
-        int x_current = x_from;
-        double test = (x_from - x_to) + 0.5 * (y_from - y_to);
+    int x = s_x;
+    int y = s_y;
+    double t;
+    switch (region) {
+        case FIRST:
+            t = (s_x - b_x) + 0.5 * (s_y - b_y);
 
-        for (int y_current = y_from; y_current > y_to; --y_current) {
-            draw(x_current, y_current, from, to, color_a, color_b);
-
-            if (test < 0) {
-                x_current += 1;
-                test += (x_from - x_to) + (y_from - y_to);
-            } else {
-                test += (x_from - x_to);
+            for (y = s_y; y > b_y; --y) {
+                interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
+                if (t < 0) {
+                    x += 1;
+                    t += (s_x - b_x) + (s_y - b_y);
+                } else {
+                    t += (s_x - b_x);
+                }
             }
+            break;
+        case SECOND:
+            t = (b_y - s_y) + 0.5 * (b_x - s_x);
 
-        }
-    } else if (SECOND == region) {
-        int y_current = y_from;
-        double test = (y_to - y_from) + 0.5 * (x_to - x_from);
+            for (x = s_x; x < b_x; ++x) {
+                interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
 
-        for (int x_current = x_from; x_current < x_to; ++x_current) {
-            draw(x_current, y_current, from, to, color_a, color_b);
-
-            if (test < 0) {
-                y_current -= 1;
-                test += (y_to - y_from) + (x_to - x_from);
-            } else {
-                test += (y_to - y_from);
+                if (t < 0) {
+                    y -= 1;
+                    t += (b_y - s_y) + (b_x - s_x);
+                } else {
+                    t += (b_y - s_y);
+                }
             }
+            break;
+        case THIRD:
+            t = (s_y - b_y) + 0.5 * (b_x - s_x);
 
-
-        }
-    } else if (THIRD == region) {
-        int y_current = y_from;
-        double test = (y_from - y_to) + 0.5 * (x_to - x_from);
-
-        for (int x_current = x_from; x_current < x_to; ++x_current) {
-            draw(x_current, y_current, from, to, color_a, color_b);
-            if (test < 0) {
-                y_current += 1;
-                test += (y_from - y_to) + (x_to - x_from);
-            } else {
-                test += (y_from - y_to);
+            for (x = s_x; x < b_x; ++x) {
+                interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
+                if (t < 0) {
+                    y += 1;
+                    t += (s_y - b_y) + (b_x - s_x);
+                } else {
+                    t += (s_y - b_y);
+                }
             }
-        }
-    } else if (FOURTH == region) {
-        int x_current = x_from;
-        double test = (x_from - x_to) + 0.5 * (y_to - y_from);
+            break;
+        case FOURTH:
+            t = (s_x - b_x) + 0.5 * (b_y - s_y);
 
-        for (int y_current = y_from; y_current < y_to; ++y_current) {
-            draw(x_current, y_current, from, to, color_a, color_b);
+            for (y = s_y; y < b_y; ++y) {
+                interpolate(x, y, smallerVertex, biggerVertex, color_a, color_b);
 
-            if (test < 0) {
-                x_current += 1;
-                test += (x_from - x_to) + (y_to - y_from);
-            } else {
-                test += (x_from - x_to);
+                if (t < 0) {
+                    x += 1;
+                    t += (s_x - b_x) + (b_y - s_y);
+                } else {
+                    t += (s_x - b_x);
+                }
             }
-
-
-        }
     }
-
-
 }
 
-void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpvertices) {
+double calculateSlope(const Vec3 &a, const Vec3 &b) {
+    return (double) (b.y - a.y) / (double) (b.x - a.x);
+}
+
+void Scene::lineRasterization(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpvertices) {
     Vec3 v0 = vpvertices[i][j];
     Vec3 v1 = vpvertices[i][j + 1];
     Vec3 v2 = vpvertices[i][j + 2];
     double m;
-    Camera c = *cam;
 
     vector<Vec3> temp = {v0, v1, v2};
 
@@ -294,6 +285,8 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         a = aclipped;
         b = bclipped;
 
+
+        //mandatory to get rid of clipping errors!!
         if ((int) a.x > cam->verRes - 1) a.x = cam->verRes - 1;
         if ((int) a.y > cam->horRes - 1) a.x = cam->horRes - 1;
         if ((int) a.x < 0) a.x = 0;
@@ -305,36 +298,17 @@ void Scene::midPoint(int i, int j, int id, Camera *cam, vector<vector<Vec3>> vpv
         if ((int) b.y < 0) b.y = 0;
 
 
-        int x_from = a.x;
-        int x_to = b.x;
-        int y_from = a.y;
-        int y_to = b.y;
-        m = (double) (y_to - y_from) / (double) (x_to - x_from);
-        if (m < -1) {
-            if (x_from > x_to) {
-                drawLine(b, a, FIRST, color_b, color_a);
-            } else {
-                drawLine(a, b, FIRST, color_a, color_b);
-            }
-        } else if (m < 0) {
-            if (x_from > x_to) {
-                drawLine(b, a, SECOND, color_b, color_a);
-            } else {
-                drawLine(a, b, SECOND, color_a, color_b);
-            }
-        } else if (m < 1) {
-            if (x_from > x_to) {
-                drawLine(b, a, THIRD, color_b, color_a);
-            } else {
-                drawLine(a, b, THIRD, color_a, color_b);
-            }
-        } else {
-            if (x_from > x_to) {
-                drawLine(b, a, FOURTH, color_b, color_a);
-            } else {
-                drawLine(a, b, FOURTH, color_a, color_b);
-            }
-        }
+        m = calculateSlope(a, b);
+
+        if (m < -1)
+            a.x > b.x ? drawLine(b, a, FIRST, color_b, color_a) : drawLine(a, b, FIRST, color_a, color_b);
+        else if (m < 0)
+            a.x > b.x ? drawLine(b, a, SECOND, color_b, color_a) : drawLine(a, b, SECOND, color_a, color_b);
+        else if (m < 1)
+            a.x > b.x ? drawLine(b, a, THIRD, color_b, color_a) : drawLine(a, b, THIRD, color_a, color_b);
+        else
+            a.x > b.x ? drawLine(b, a, FOURTH, color_b, color_a) : drawLine(a, b, FOURTH, color_a, color_b);
+
 
     }
 }
@@ -382,7 +356,7 @@ Scene::Scene(
     str = pElement->GetText();
     sscanf(str, "%lf %lf %lf", &backgroundColor.r, &backgroundColor.g, &backgroundColor.b);
 
-    // read culling
+    // read backfaceCulling
     pElement = pRoot->FirstChildElement("Culling");
     if (pElement != NULL) {
         str = pElement->GetText();

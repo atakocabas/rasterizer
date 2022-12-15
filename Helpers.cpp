@@ -12,6 +12,7 @@
 using namespace std;
 #define PI 3.14159265
 
+
 void swapVec3(Vec3 &a, Vec3 &b) {
     Vec3 tmp(a);
     a.x = b.x;
@@ -23,16 +24,7 @@ void swapVec3(Vec3 &a, Vec3 &b) {
     b.z = tmp.z;
 }
 
-double calculateSlope(const Vec3 &a, const Vec3 &b) {
-
-    if (a.x != b.x)
-        return (a.y - b.y) / (a.x - b.x);
-    else {
-        return __DBL_MAX__;
-    }
-}
-
-int culling(int i, int j, Camera *cam, vector<vector<Vec3>> cameraview) {
+ORDER backfaceCulling(int i, int j, Camera *cam, vector<vector<Vec3>> cameraview) {
 
     Vec3 v0 = cameraview[i][j];
     Vec3 v1 = cameraview[i][j + 1];
@@ -42,9 +34,9 @@ int culling(int i, int j, Camera *cam, vector<vector<Vec3>> cameraview) {
     Vec3 normal = crossProductVec3(subtractVec3(v1, v0), subtractVec3(v2, v0));
 
     if (dotProductVec3(normal, v1) > 0)
-        return 1;
+        return FRONT;
     else
-        return 0;
+        return BACK;
 }
 
 Matrix4 calculateViewportMatrix(Camera *camera) {
@@ -62,7 +54,7 @@ Matrix4 calculateViewportMatrix(Camera *camera) {
     return res;
 }
 
-bool LiangBarskyAlgorithm(Vec3 v0, Vec3 v1, Camera *cam, Vec3 &v0new, Vec3 &v1new, Color &color_a, Color &color_b,
+bool LiangBarskyAlgorithm(const Vec3& v0, const Vec3& v1, Camera *cam, Vec3 &v0new, Vec3 &v1new, Color &color_a, Color &color_b,
                           const Scene& scene) {
     Color v0color = *(scene.colorsOfVertices.at(v0.colorId - 1)), v1color = *(scene.colorsOfVertices.at(
             v1.colorId - 1));
@@ -121,21 +113,6 @@ bool isVisible(double den, double num, double &te, double &tl) {
     } else if (num > 0)
         return false; // parallel line
     return true;
-}
-
-Vec3 ComputeTriangleNormal(Vec3 v1, Vec3 v2, Vec3 v3) {
-    Vec3 u = subtractVec3(v2, v1);
-    Vec3 v = subtractVec3(v3, v1);
-
-    return crossProductVec3(u, v);
-}
-
-bool IsTriangleVisible(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 viewerPosition) {
-    Vec3 normal = ComputeTriangleNormal(v1, v2, v3);
-    Vec3 toViewer = subtractVec3(viewerPosition, v1);
-    // Check if a triangle is facing the viewer
-
-    return dotProductVec3(normal, toViewer) > 0;
 }
 
 Matrix4 calculatePerspectiveProjection(Camera *camera) {
@@ -255,7 +232,7 @@ Matrix4 computeScalingMatrix(Scaling *s) {
 /*
  * Calculate cross product of vec3 a, vec3 b and return resulting vec3.
  */
-Vec3 crossProductVec3(Vec3 a, Vec3 b) {
+Vec3 crossProductVec3(const Vec3& a, const Vec3& b) {
     Vec3 result;
 
     result.x = a.y * b.z - b.y * a.z;
@@ -268,21 +245,21 @@ Vec3 crossProductVec3(Vec3 a, Vec3 b) {
 /*
  * Calculate dot product of vec3 a, vec3 b and return resulting value.
  */
-double dotProductVec3(Vec3 a, Vec3 b) {
+double dotProductVec3(const Vec3& a, const Vec3& b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /*
  * Find length (|v|) of vec3 v.
  */
-double magnitudeOfVec3(Vec3 v) {
+double magnitudeOfVec3(const Vec3& v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 /*
  * Normalize the vec3 to make it unit vec3.
  */
-Vec3 normalizeVec3(Vec3 v) {
+Vec3 normalizeVec3(const Vec3& v) {
     Vec3 result;
     double d;
 
@@ -297,7 +274,7 @@ Vec3 normalizeVec3(Vec3 v) {
 /*
  * Return -v (inverse of vec3 v)
  */
-Vec3 inverseVec3(Vec3 v) {
+Vec3 inverseVec3(const Vec3& v) {
     Vec3 result;
     result.x = -v.x;
     result.y = -v.y;
@@ -309,7 +286,7 @@ Vec3 inverseVec3(Vec3 v) {
 /*
  * Add vec3 a to vec3 b and return resulting vec3 (a+b).
  */
-Vec3 addVec3(Vec3 a, Vec3 b) {
+Vec3 addVec3(const Vec3& a, const Vec3& b) {
     Vec3 result;
     result.x = a.x + b.x;
     result.y = a.y + b.y;
@@ -321,7 +298,7 @@ Vec3 addVec3(Vec3 a, Vec3 b) {
 /*
  * Subtract vec3 b from vec3 a and return resulting vec3 (a-b).
  */
-Vec3 subtractVec3(Vec3 a, Vec3 b) {
+Vec3 subtractVec3(const Vec3& a, const Vec3& b) {
     Vec3 result;
     result.x = a.x - b.x;
     result.y = a.y - b.y;
@@ -333,7 +310,7 @@ Vec3 subtractVec3(Vec3 a, Vec3 b) {
 /*
  * Multiply each element of vec3 with scalar.
  */
-Vec3 multiplyVec3WithScalar(Vec3 v, double c) {
+Vec3 multiplyVec3WithScalar(const Vec3& v, double c) {
     Vec3 result;
     result.x = v.x * c;
     result.y = v.y * c;
@@ -386,7 +363,7 @@ Matrix4 getIdentityMatrix() {
 /*
  * Multiply matrices m1 (Matrix4) and m2 (Matrix4) and return the result matrix r (Matrix4).
  */
-Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2) {
+Matrix4 multiplyMatrixWithMatrix(const Matrix4& m1, const Matrix4& m2) {
     Matrix4 result;
     double total;
 
@@ -407,7 +384,7 @@ Matrix4 multiplyMatrixWithMatrix(Matrix4 m1, Matrix4 m2) {
 /*
  * Multiply matrix m (Matrix4) with vector v (vec4) and store the result in vector r (vec4).
  */
-Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v) {
+Vec4 multiplyMatrixWithVec4(const Matrix4& m, Vec4 v) {
     double values[4];
     double total;
 
@@ -419,5 +396,5 @@ Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v) {
         values[i] = total;
     }
 
-    return Vec4(values[0], values[1], values[2], values[3], v.colorId);
+    return {values[0], values[1], values[2], values[3], v.colorId};
 }
